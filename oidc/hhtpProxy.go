@@ -19,6 +19,7 @@ func NewDexHTTPReverseProxy(serverAddr string, transport http.RoundTripper) func
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("proxy server address: ", serverAddr)
 	proxy := httputil.NewSingleHostReverseProxy(target)
 	proxy.Transport = transport
 	//proxy.Director = func(request *http.Request) {
