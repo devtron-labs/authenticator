@@ -13,6 +13,7 @@ func Authorizer(sessionManager *SessionManager) func(next http.Handler) http.Han
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			//var users []string
+			fmt.Println("requestUrl: "+ r.URL.Path)
 			cookie, _ := r.Cookie("argocd.token")
 			token := ""
 			if cookie != nil {
