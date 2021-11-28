@@ -21,7 +21,7 @@ func main() {
 	serveTls := flag.Bool("serveTls", false, "dex clinet id")
 
 	flag.Parse()
-	dexUrlProxy := *url + "api/dex"
+	dexUrlProxy := *url + "api/dex/"
 	fmt.Println("dex endpoint: ", *serveTls)
 	settings := &oidc.Settings{
 		URL: *url,
@@ -37,7 +37,7 @@ func main() {
 	sesionManager := middleware.NewSessionManager(settings, *dexServerAddress)
 	// dex setting ends
 	r := mux.NewRouter().StrictSlash(false)
-	r.PathPrefix("/api/dex/").HandlerFunc(dexProxy)
+	r.PathPrefix("/api/dex").HandlerFunc(dexProxy)
 	r.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
 		io.WriteString(writer, "Hello, user!\n")
 	})
