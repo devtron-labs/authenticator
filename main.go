@@ -48,15 +48,15 @@ func main() {
 	}
 	r.HandleFunc("/hello", helloHandler)
 	log.Println("Listing for requests at http://localhost:8000/hello")
-	cert, err := tls.LoadX509KeyPair("localhost.crt", "localhost.key")
-	if err != nil {
-		log.Fatal(err)
-	}
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", 8000),
 		Handler: middleware.Authorizer(sesionManager)(r),
 	}
 	if *serveTls {
+		cert, err := tls.LoadX509KeyPair("localhost.crt", "localhost.key")
+		if err != nil {
+			log.Fatal(err)
+		}
 		server.TLSConfig = &tls.Config{
 			Certificates: []tls.Certificate{cert},
 		}
