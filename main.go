@@ -13,13 +13,16 @@ import (
 )
 
 func main() {
+
 	dexServerAddress := flag.String("dexServerAddress", "http://127.0.0.1:5556", "dex endpoint")
 	url := flag.String("authenticatorUrl", "https://127.0.0.1:8000/", "public endpoint for authenticator")
 	dexClientSecret := flag.String("dexClientSecret", "", "dex clinet secret")
 	dexCLIClientID := flag.String("dexCLIClientID", "argo-cd", "dex clinet id")
+	serveTls := flag.Bool("serveTls", false, "dex clinet id")
+
 	flag.Parse()
 	dexUrlProxy := *url + "api/dex"
-	fmt.Println("dex endpoint: ", *dexServerAddress)
+	fmt.Println("dex endpoint: ", *serveTls)
 	settings := &oidc.Settings{
 		URL: *url,
 		OIDCConfig: oidc.OIDCConfig{CLIClientID: *dexCLIClientID,
@@ -50,14 +53,17 @@ func main() {
 		log.Fatal(err)
 	}
 	server := &http.Server{
-		Addr: fmt.Sprintf(":%d", 8000),
-		TLSConfig: &tls.Config{
-			Certificates: []tls.Certificate{cert},
-		},
+		Addr:    fmt.Sprintf(":%d", 8000),
 		Handler: middleware.Authorizer(sesionManager)(r),
 	}
-	server.ListenAndServeTLS("", "")
-	err = http.ListenAndServeTLS(":8000", "localhost.crt", "localhost.key", r)
+	if *serveTls {
+		server.TLSConfig = &tls.Config{
+			Certificates: []tls.Certificate{cert},
+		}
+		server.ListenAndServeTLS("", "")
+	} else {
+		server.ListenAndServe()
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
