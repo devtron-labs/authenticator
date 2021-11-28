@@ -21,7 +21,7 @@ func main() {
 	serveTls := flag.Bool("serveTls", false, "dex clinet id")
 
 	flag.Parse()
-	dexUrlProxy := *url + "api/dex/"
+	dexUrlProxy := *url + "api/dex"
 	fmt.Println("dex endpoint: ", *serveTls)
 	settings := &oidc.Settings{
 		URL: *url,
