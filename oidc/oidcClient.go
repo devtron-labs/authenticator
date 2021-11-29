@@ -9,7 +9,26 @@ import (
 	"time"
 )
 
-func GetOidcClient(dexServerAddress string, settings *Settings) (*ClientApp, func(writer http.ResponseWriter, request *http.Request), error) {
+func GetOidcClient(conf *DexConfig) (*ClientApp, func(writer http.ResponseWriter, request *http.Request), error) {
+	settings, err := GetSettings(conf)
+	oidcClient, dexProxy, err := getOidcClient(conf.DexServerAddress, settings)
+	return oidcClient, dexProxy, err
+}
+
+func GetSettings(conf *DexConfig) (*Settings, error) {
+	proxyUrl, err := conf.getDexProxyUrl()
+	if err != nil {
+		return nil, err
+	}
+	settings := &Settings{
+		URL: conf.Url,
+		OIDCConfig: OIDCConfig{CLIClientID: conf.DexClientID,
+			ClientSecret: conf.DexClientSecret,
+			Issuer:       proxyUrl},
+	}
+	return settings, nil
+}
+func getOidcClient(dexServerAddress string, settings *Settings) (*ClientApp, func(writer http.ResponseWriter, request *http.Request), error) {
 	dexClient := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: nil,
@@ -31,14 +50,13 @@ func GetOidcClient(dexServerAddress string, settings *Settings) (*ClientApp, fun
 	return oidcClient, dexProxy, err
 }
 
-const DexProxyUri = "api/dex"
+const dexProxyUri = "api/dex"
 
 type DexConfig struct {
 	DexServerAddress string `env:"DEX_SERVER_ADDRESS" envDefault:"http://argocd-dex-server.devtroncd:5556/authenticator"`
 	Url              string `env:"AUTHENTICATOR_URL" envDefault:"https://demo.devtron.info:32443/authenticator/"`
 	DexClientSecret  string `env:"DEX_CLIENT_SECRET" envDefault:""`
 	DexClientID      string `env:"DEX_CLIENT_ID" envDefault:"argo-cd"`
-	ServeTls         bool   `env:"SERVETLS" envDefault:"false"`
 }
 
 func (c *DexConfig) getDexProxyUrl() (string, error) {
@@ -46,7 +64,7 @@ func (c *DexConfig) getDexProxyUrl() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	u.Path = path.Join(u.Path, DexProxyUri)
+	u.Path = path.Join(u.Path, dexProxyUri)
 	s := u.String()
 	return s, nil
 }

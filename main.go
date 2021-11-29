@@ -19,22 +19,25 @@ func main() {
 	dexClientSecret := flag.String("dexClientSecret", "", "dex clinet secret")
 	dexCLIClientID := flag.String("dexCLIClientID", "argo-cd", "dex clinet id")
 	serveTls := flag.Bool("serveTls", false, "dex clinet id")
-
 	flag.Parse()
-	dexUrlProxy := *url + "api/dex"
-	fmt.Println("dex endpoint: ", *serveTls)
-	settings := &oidc.Settings{
-		URL: *url,
-		OIDCConfig: oidc.OIDCConfig{CLIClientID: *dexCLIClientID,
-			ClientSecret: *dexClientSecret,
-			Issuer:       dexUrlProxy},
+
+	dexConfig := &oidc.DexConfig{
+		DexServerAddress: *dexServerAddress,
+		Url:              *url,
+		DexClientSecret:  *dexClientSecret,
+		DexClientID:      *dexCLIClientID,
 	}
-	oidcClient, dexProxy, err := oidc.GetOidcClient(*dexServerAddress, settings)
+	oidcClient, dexProxy, err := oidc.GetOidcClient(dexConfig)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	sesionManager := middleware.NewSessionManager(settings, *dexServerAddress)
+	settings, err := oidc.GetSettings(dexConfig)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	sessionManager := middleware.NewSessionManager(settings, dexConfig.DexServerAddress)
 	// dex setting ends
 	r := mux.NewRouter().StrictSlash(false)
 	r.PathPrefix("/api/dex").HandlerFunc(dexProxy)
@@ -50,7 +53,7 @@ func main() {
 	log.Println("Listing for requests at http://localhost:8000/hello")
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", 8000),
-		Handler: middleware.Authorizer(sesionManager)(r),
+		Handler: middleware.Authorizer(sessionManager)(r),
 	}
 	if *serveTls {
 		cert, err := tls.LoadX509KeyPair("localhost.crt", "localhost.key")
