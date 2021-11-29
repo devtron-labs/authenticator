@@ -3,6 +3,8 @@ package oidc
 import (
 	"net"
 	"net/http"
+	"net/url"
+	"path"
 	"time"
 )
 
@@ -26,4 +28,24 @@ func GetOidcClient(dexServerAddress string, settings *Settings) (*ClientApp, fun
 		return nil, nil, err
 	}
 	return oidcClient, dexProxy, err
+}
+
+const DexProxyUri = "api/dex"
+
+type DexConfig struct {
+	DexServerAddress string `env:"dexServerAddress" envDefault:"http://argocd-dex-server.devtroncd:5556/authenticator"`
+	Url              string `env:"authenticatorUrl" envDefault:"https://demo.devtron.info:32443/authenticator/"`
+	DexClientSecret  string `env:"dexClientSecret" envDefault:""`
+	DexCLIClientID   string `env:"dexCLIClientID" envDefault:"argo-cd"`
+	ServeTls         bool   `env:"serveTls" envDefault:"false"`
+}
+
+func (c *DexConfig) getDexProxyUrl() (string, error) {
+	u, err := url.Parse(c.Url)
+	if err != nil {
+		return "", err
+	}
+	u.Path = path.Join(u.Path, DexProxyUri)
+	s := u.String()
+	return s, nil
 }
