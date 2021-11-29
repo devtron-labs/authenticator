@@ -53,7 +53,7 @@ func main() {
 	log.Println("Listing for requests at http://localhost:8000/hello")
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", 8000),
-		Handler: middleware.Authorizer(sessionManager)(r),
+		Handler: middleware.Authorizer(sessionManager, middleware.WhitelistChecker)(r),
 	}
 	if *serveTls {
 		cert, err := tls.LoadX509KeyPair("localhost.crt", "localhost.key")
