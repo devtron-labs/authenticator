@@ -3,6 +3,7 @@ module github.com/devtron-labs/authenticator
 go 1.16
 
 require (
+	github.com/caarlos0/env/v6 v6.7.2 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/golang-jwt/jwt/v4 v4.1.0
 	github.com/gorilla/mux v1.8.0

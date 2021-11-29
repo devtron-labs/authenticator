@@ -1,6 +1,7 @@
 package oidc
 
 import (
+	"github.com/caarlos0/env/v6"
 	"net"
 	"net/http"
 	"net/url"
@@ -33,11 +34,11 @@ func GetOidcClient(dexServerAddress string, settings *Settings) (*ClientApp, fun
 const DexProxyUri = "api/dex"
 
 type DexConfig struct {
-	DexServerAddress string `env:"dexServerAddress" envDefault:"http://argocd-dex-server.devtroncd:5556/authenticator"`
-	Url              string `env:"authenticatorUrl" envDefault:"https://demo.devtron.info:32443/authenticator/"`
-	DexClientSecret  string `env:"dexClientSecret" envDefault:""`
-	DexCLIClientID   string `env:"dexCLIClientID" envDefault:"argo-cd"`
-	ServeTls         bool   `env:"serveTls" envDefault:"false"`
+	DexServerAddress string `env:"DEX_SERVER_ADDRESS" envDefault:"http://argocd-dex-server.devtroncd:5556/authenticator"`
+	Url              string `env:"AUTHENTICATOR_URL" envDefault:"https://demo.devtron.info:32443/authenticator/"`
+	DexClientSecret  string `env:"DEX_CLIENT_SECRET" envDefault:""`
+	DexClientID      string `env:"DEX_CLIENT_ID" envDefault:"argo-cd"`
+	ServeTls         bool   `env:"SERVETLS" envDefault:"false"`
 }
 
 func (c *DexConfig) getDexProxyUrl() (string, error) {
@@ -48,4 +49,10 @@ func (c *DexConfig) getDexProxyUrl() (string, error) {
 	u.Path = path.Join(u.Path, DexProxyUri)
 	s := u.String()
 	return s, nil
+}
+
+func DexConfigConfigFromEnv() (*DexConfig, error) {
+	cfg := &DexConfig{}
+	err := env.Parse(cfg)
+	return cfg, err
 }
