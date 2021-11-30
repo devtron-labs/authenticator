@@ -18,7 +18,7 @@ func main() {
 	url := flag.String("authenticatorUrl", "https://127.0.0.1:8000/", "public endpoint for authenticator")
 	dexClientSecret := flag.String("dexClientSecret", "", "dex clinet secret")
 	dexCLIClientID := flag.String("dexCLIClientID", "argo-cd", "dex clinet id")
-	serveTls := flag.Bool("serveTls", false, "dex clinet id")
+	serveTls := flag.Bool("serveTls", true, "dex clinet id")
 	flag.Parse()
 
 	dexConfig := &oidc.DexConfig{
@@ -27,7 +27,9 @@ func main() {
 		DexClientSecret:  *dexClientSecret,
 		DexClientID:      *dexCLIClientID,
 	}
-	oidcClient, dexProxy, err := oidc.GetOidcClient(dexConfig)
+	userVerier := func(email string) bool { return true }
+	redirectUrlSanitiser := func(url string) string { return url }
+	oidcClient, dexProxy, err := oidc.GetOidcClient(dexConfig, userVerier, redirectUrlSanitiser)
 	if err != nil {
 		fmt.Println(err)
 		return
