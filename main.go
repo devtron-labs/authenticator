@@ -41,7 +41,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	sessionManager := middleware.NewSessionManager(settings, dexConfig.DexServerAddress)
+	sessionManager := middleware.NewSessionManager(settings, dexConfig)
 	loginService := middleware.NewUserLogin(sessionManager)
 	// dex setting ends
 	r := mux.NewRouter().StrictSlash(false)
