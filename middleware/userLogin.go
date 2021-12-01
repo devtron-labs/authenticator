@@ -54,7 +54,7 @@ func (impl LoginService) CreateLoginSession(username string, password string) (s
 	}
 	impl.sessionManager.GetUserSessionDuration().Seconds()
 	jwtToken, err := impl.sessionManager.Create(
-		fmt.Sprintf("%s:%s", username, AccountCapabilityLogin),
+		fmt.Sprintf("%s", username),
 		int64(impl.sessionManager.GetUserSessionDuration().Seconds()),
 		uniqueId.String())
 	return jwtToken, err
