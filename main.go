@@ -42,7 +42,11 @@ func main() {
 		return
 	}
 	sessionManager := middleware.NewSessionManager(settings, dexConfig)
-	loginService := middleware.NewUserLogin(sessionManager)
+	loginService, err := middleware.NewUserLogin(sessionManager, true)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	// dex setting ends
 	r := mux.NewRouter().StrictSlash(false)
 	r.PathPrefix("/api/dex").HandlerFunc(dexProxy)
