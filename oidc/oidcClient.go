@@ -59,7 +59,7 @@ type DexConfig struct {
 	DexClientSecret  string `env:"DEX_CLIENT_SECRET" envDefault:""`
 	DexClientID      string `env:"DEX_CLIENT_ID" envDefault:"argo-cd"`
 	// Specifies token expiration duration
-	UserSessionDurationSeconds int `env:"USER_SESSION_DURATION_SECONDS" envDefault:"300"`
+	UserSessionDurationSeconds int `env:"USER_SESSION_DURATION_SECONDS" envDefault:"86400"`
 }
 
 func (c *DexConfig) getDexProxyUrl() (string, error) {
