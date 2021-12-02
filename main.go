@@ -19,6 +19,7 @@ func main() {
 	url := flag.String("authenticatorUrl", "https://127.0.0.1:8000/", "public endpoint for authenticator")
 	dexClientSecret := flag.String("dexClientSecret", "", "dex clinet secret")
 	dexCLIClientID := flag.String("dexCLIClientID", "argo-cd", "dex clinet id")
+	serverSecret := flag.String("serverSecret", "", "server secret for authentication")
 	serveTls := flag.Bool("serveTls", true, "dex clinet id")
 	flag.Parse()
 
@@ -28,6 +29,7 @@ func main() {
 		DexClientSecret:            *dexClientSecret,
 		DexClientID:                *dexCLIClientID,
 		UserSessionDurationSeconds: 10000,
+		ServerSecret:               *serverSecret,
 	}
 	userVerier := func(email string) bool { return true }
 	redirectUrlSanitiser := func(url string) string { return url }
