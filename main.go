@@ -56,7 +56,7 @@ func main() {
 		io.WriteString(writer, "Hello, user!\n")
 	})
 	r.HandleFunc("/auth/login", oidcClient.HandleLogin)
-	r.HandleFunc("/auth/callback", oidcClient.HandleCallback)
+	r.HandleFunc(oidc.CallbackEndpoint, oidcClient.HandleCallback)
 	helloHandler := func(w http.ResponseWriter, req *http.Request) {
 		io.WriteString(w, "Hello, world!\n")
 	}
