@@ -1,12 +1,14 @@
 package main
 
 import (
+	"crypto/sha256"
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/json"
 	"flag"
 	"fmt"
+	client2 "github.com/devtron-labs/authenticator/client"
 	"github.com/devtron-labs/authenticator/middleware"
-	"github.com/devtron-labs/authenticator/oidc"
 	"github.com/gorilla/mux"
 	"io"
 	"log"
@@ -15,40 +17,47 @@ import (
 
 func main() {
 
+	h := sha256.New()
+	_, err := h.Write([]byte("RLVvy5OgjuJrgQi0GcuvfvC8s/FGdP2zluXSahYxUdM="))
+	if err != nil {
+		panic(err)
+	}
+	sha := h.Sum(nil)
+	s := base64.URLEncoding.EncodeToString(sha)[:40]
+
+	fmt.Println(s)
 	dexServerAddress := flag.String("dexServerAddress", "http://127.0.0.1:5556", "dex endpoint")
-	url := flag.String("authenticatorUrl", "https://127.0.0.1:8000/", "public endpoint for authenticator")
-	dexClientSecret := flag.String("dexClientSecret", "", "dex clinet secret")
 	dexCLIClientID := flag.String("dexCLIClientID", "argo-cd", "dex clinet id")
-	serverSecret := flag.String("serverSecret", "", "server secret for authentication")
 	serveTls := flag.Bool("serveTls", true, "dex clinet id")
 	flag.Parse()
 
-	dexConfig := &oidc.DexConfig{
-		DexServerAddress:           *dexServerAddress,
-		Url:                        *url,
-		DexClientSecret:            *dexClientSecret,
-		DexClientID:                *dexCLIClientID,
-		UserSessionDurationSeconds: 10000,
-		ServerSecret:               *serverSecret,
+	client, err := client2.NewK8sClient(true)
+	if err != nil {
+		panic(err)
 	}
+	dexConfig, err := client.GetServerSettings()
+	if err != nil {
+		panic(err)
+	}
+	dexConfig.DexServerAddress = *dexServerAddress
+	dexConfig.DexClientID = *dexCLIClientID
+	dexConfig.UserSessionDurationSeconds = 10000
+
 	userVerier := func(email string) bool { return true }
 	redirectUrlSanitiser := func(url string) string { return url }
-	oidcClient, dexProxy, err := oidc.GetOidcClient(dexConfig, userVerier, redirectUrlSanitiser)
+	oidcClient, dexProxy, err := client2.GetOidcClient(dexConfig, userVerier, redirectUrlSanitiser)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	settings, err := oidc.GetSettings(dexConfig)
+	settings, err := client2.GetSettings(dexConfig)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	sessionManager := middleware.NewSessionManager(settings, dexConfig)
-	loginService, err := middleware.NewUserLogin(sessionManager, true)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	loginService := middleware.NewUserLogin(sessionManager, client)
+
 	// dex setting ends
 	r := mux.NewRouter().StrictSlash(false)
 	r.PathPrefix("/api/dex").HandlerFunc(dexProxy)
