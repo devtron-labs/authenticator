@@ -9,6 +9,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"os/user"
 	"path/filepath"
+	"time"
 )
 
 type LocalDevMode bool
@@ -94,6 +95,11 @@ func (impl *K8sClient) GetServerSettings() (*DexConfig, error) {
 	}
 	if settingURL, ok := cm.Data[settingURLKey]; ok {
 		cfg.Url = settingURL
+	}
+	if adminPasswordMtimeBytes, ok := secret.Data[SettingAdminPasswordMtimeKey]; ok {
+		if mTime, err := time.Parse(time.RFC3339, string(adminPasswordMtimeBytes)); err == nil {
+			cfg.AdminPasswordMtime = mTime
+		}
 	}
 	return cfg, nil
 }

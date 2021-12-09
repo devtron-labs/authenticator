@@ -113,6 +113,7 @@ type Settings struct {
 	OIDCConfig OIDCConfig
 	// Specifies token expiration duration
 	UserSessionDuration time.Duration `json:"userSessionDuration,omitempty"`
+	AdminPasswordMtime  time.Time     `json:"adminPasswordMtime"`
 }
 
 func appendURLPath(inputURL string, inputPath string) (string, error) {

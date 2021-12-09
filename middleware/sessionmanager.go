@@ -139,11 +139,10 @@ func (mgr *SessionManager) Parse(tokenString string) (jwt.Claims, error) {
 	if err != nil {
 		return nil, err
 	}
-	/*
-		issuedAt := time.Unix(int64(claims["iat"].(float64)), 0)
-		if issuedAt.Before(settings.AdminPasswordMtime) {
-			return nil, fmt.Errorf("Password for superuser has changed since token issued")
-		}*/
+	issuedAt := time.Unix(int64(claims["iat"].(float64)), 0)
+	if issuedAt.Before(settings.AdminPasswordMtime) {
+		return nil, fmt.Errorf("Password for superuser has changed since token issued")
+	}
 	return token.Claims, nil
 }
 

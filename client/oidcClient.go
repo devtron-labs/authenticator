@@ -31,6 +31,7 @@ func GetSettings(conf *DexConfig) (*oidc.Settings, error) {
 			Issuer:       proxyUrl,
 			ServerSecret: conf.ServerSecret},
 		UserSessionDuration: time.Duration(conf.UserSessionDurationSeconds) * time.Second,
+		AdminPasswordMtime:  conf.AdminPasswordMtime,
 	}
 	return settings, nil
 }
@@ -67,7 +68,8 @@ type DexConfig struct {
 	DexClientSecret  string
 	ServerSecret     string
 	// Specifies token expiration duration
-	UserSessionDurationSeconds int `env:"USER_SESSION_DURATION_SECONDS" envDefault:"86400"`
+	UserSessionDurationSeconds int       `env:"USER_SESSION_DURATION_SECONDS" envDefault:"86400"`
+	AdminPasswordMtime         time.Time `json:"ADMIN_PASSWORD_MTIME"`
 }
 
 func (c *DexConfig) getDexProxyUrl() (string, error) {
