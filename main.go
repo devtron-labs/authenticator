@@ -18,6 +18,7 @@
 package main
 
 import (
+	"context"
 	"crypto/sha256"
 	"crypto/tls"
 	"encoding/base64"
@@ -95,7 +96,7 @@ func main() {
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		token, err := loginService.CreateLoginSession(up.Username, up.Password)
+		token, err := loginService.Create(context.Background(), up.Username, up.Password)
 		if err != nil {
 			fmt.Println(err)
 			http.Error(writer, fmt.Errorf("invalid username or password").Error(), http.StatusForbidden)
