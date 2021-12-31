@@ -49,7 +49,7 @@ func main() {
 	serveTls := flag.Bool("serveTls", true, "dex clinet id")
 	flag.Parse()
 
-	client, err := client2.NewK8sClient(true)
+	client, err := client2.NewK8sClient(new(client2.RuntimeConfig))
 	if err != nil {
 		panic(err)
 	}
