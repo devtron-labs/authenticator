@@ -172,7 +172,7 @@ func (impl *K8sClient) GenerateDexConfigYAML(settings *DexConfig) ([]byte, error
 	argoCDStaticClient := map[string]interface{}{
 		"id":     settings.DexClientID,
 		"name":   "devtron",
-		"secret": settings.DexClientSecret,
+		"secret": settings.DexOAuth2ClientSecret(),
 		"redirectURIs": []string{
 			redirectURL,
 		},
