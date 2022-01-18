@@ -87,6 +87,7 @@ type DexConfig struct {
 	// Specifies token expiration duration
 	UserSessionDurationSeconds int       `env:"USER_SESSION_DURATION_SECONDS" envDefault:"86400"`
 	AdminPasswordMtime         time.Time `json:"ADMIN_PASSWORD_MTIME"`
+	DexConfigRaw               string
 }
 
 func (c *DexConfig) getDexProxyUrl() (string, error) {
@@ -97,6 +98,22 @@ func (c *DexConfig) getDexProxyUrl() (string, error) {
 	u.Path = path.Join(u.Path, dexProxyUri)
 	s := u.String()
 	return s, nil
+}
+
+func (c *DexConfig) RedirectURL() (string, error) {
+	return appendURLPath(c.Url, CallbackEndpoint)
+}
+
+func (c *DexConfig) DexRedirectURL() (string, error) {
+	return appendURLPath(c.Url, DexCallbackEndpoint)
+}
+func appendURLPath(inputURL string, inputPath string) (string, error) {
+	u, err := url.Parse(inputURL)
+	if err != nil {
+		return "", err
+	}
+	u.Path = path.Join(u.Path, inputPath)
+	return u.String(), nil
 }
 
 func BuildDexConfig(k8sClient *K8sClient) (*DexConfig, error) {

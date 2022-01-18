@@ -19,9 +19,7 @@ package main
 
 import (
 	"context"
-	"crypto/sha256"
 	"crypto/tls"
-	"encoding/base64"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -29,21 +27,69 @@ import (
 	"github.com/devtron-labs/authenticator/middleware"
 	"github.com/gorilla/mux"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"os/exec"
+	"runtime"
 )
 
 func main() {
+	dexServerAddress := flag.String("dexServerAddress", "http://127.0.0.1:5556", "dex endpoint")
+	dexCLIClientID := flag.String("dexCLIClientID", "argo-cd", "dex clinet id")
+	flag.Parse()
 
-	h := sha256.New()
-	_, err := h.Write([]byte("RLVvy5OgjuJrgQi0GcuvfvC8s/FGdP2zluXSahYxUdM="))
+	client, err := client2.NewK8sClient(new(client2.RuntimeConfig))
 	if err != nil {
 		panic(err)
 	}
-	sha := h.Sum(nil)
-	s := base64.URLEncoding.EncodeToString(sha)[:40]
+	dexConfig, err := client.GetServerSettings()
+	if err != nil {
+		panic(err)
+	}
+	dexConfig.DexServerAddress = *dexServerAddress
+	dexConfig.DexClientID = *dexCLIClientID
+	dexConfig.UserSessionDurationSeconds = 10000
 
-	fmt.Println(s)
+	dexCfgBytes, err := client.GenerateDexConfigYAML(dexConfig)
+	if err != nil {
+		panic(err)
+	}
+	if len(dexCfgBytes) == 0 {
+		print("dex is not configured")
+	} else {
+		err = ioutil.WriteFile("/tmp/dex.yaml", dexCfgBytes, 0644)
+		if err != nil {
+			panic(err)
+		}
+		cmd := exec.Command("dex", "serve", "/tmp/dex.yaml")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err = cmd.Start()
+		if err != nil {
+			panic(err)
+		}
+	}
+	forever()
+}
+
+func forever() {
+	for {
+		runtime.Gosched()
+	}
+}
+func runWeb() {
+
+	/*	h := sha256.New()
+		_, err := h.Write([]byte("RLVvy5OgjuJrgQi0GcuvfvC8s/FGdP2zluXSahYxUdM="))
+		if err != nil {
+			panic(err)
+		}
+		sha := h.Sum(nil)
+		s := base64.URLEncoding.EncodeToString(sha)[:40]
+
+		fmt.Println(s)*/
 	dexServerAddress := flag.String("dexServerAddress", "http://127.0.0.1:5556", "dex endpoint")
 	dexCLIClientID := flag.String("dexCLIClientID", "argo-cd", "dex clinet id")
 	serveTls := flag.Bool("serveTls", true, "dex clinet id")

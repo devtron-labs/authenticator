@@ -19,7 +19,9 @@ package client
 
 import (
 	"flag"
+	"fmt"
 	"github.com/caarlos0/env/v6"
+	"gopkg.in/yaml.v3"
 	v1 "k8s.io/api/core/v1"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -110,6 +112,9 @@ const (
 	ArgoCDConfigMapName       = "argocd-cm"
 	ArgoCDSecretName          = "argocd-secret"
 	ArgocdNamespaceName       = "devtroncd"
+	CallbackEndpoint          = "/auth/callback"
+	settingDexConfigKey       = "dex.config"
+	DexCallbackEndpoint       = "/api/dex/callback"
 )
 
 func (impl *K8sClient) GetServerSettings() (*DexConfig, error) {
@@ -129,5 +134,93 @@ func (impl *K8sClient) GetServerSettings() (*DexConfig, error) {
 			cfg.AdminPasswordMtime = mTime
 		}
 	}
+	cfg.DexConfigRaw = cm.Data[settingDexConfigKey]
 	return cfg, nil
+}
+
+func (impl *K8sClient) GenerateDexConfigYAML(settings *DexConfig) ([]byte, error) {
+	redirectURL, err := settings.RedirectURL()
+	if err != nil {
+		return nil, fmt.Errorf("failed to infer redirect url from config: %v", err)
+	}
+	var dexCfg map[string]interface{}
+	err = yaml.Unmarshal([]byte(settings.DexConfigRaw), &dexCfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal dex.config from configmap: %v", err)
+	}
+	issuer, err := settings.getDexProxyUrl()
+	if err != nil {
+		return nil, fmt.Errorf("failed to find issuer url: %v", err)
+	}
+	dexCfg["issuer"] = issuer
+	dexCfg["storage"] = map[string]interface{}{
+		"type": "memory",
+	}
+	dexCfg["web"] = map[string]interface{}{
+		"http": "0.0.0.0:5556",
+	}
+	dexCfg["grpc"] = map[string]interface{}{
+		"addr": "0.0.0.0:5557",
+	}
+	dexCfg["telemetry"] = map[string]interface{}{
+		"http": "0.0.0.0:5558",
+	}
+	dexCfg["oauth2"] = map[string]interface{}{
+		"skipApprovalScreen": true,
+	}
+
+	argoCDStaticClient := map[string]interface{}{
+		"id":     settings.DexClientID,
+		"name":   "devtron",
+		"secret": settings.DexClientSecret,
+		"redirectURIs": []string{
+			redirectURL,
+		},
+	}
+
+	staticClients, ok := dexCfg["staticClients"].([]interface{})
+	if ok {
+		dexCfg["staticClients"] = append([]interface{}{argoCDStaticClient}, staticClients...)
+	} else {
+		dexCfg["staticClients"] = []interface{}{argoCDStaticClient}
+	}
+
+	dexRedirectURL, err := settings.DexRedirectURL()
+	if err != nil {
+		return nil, err
+	}
+	connectors, ok := dexCfg["connectors"].([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("malformed Dex configuration found")
+	}
+	for i, connectorIf := range connectors {
+		connector, ok := connectorIf.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("malformed Dex configuration found")
+		}
+		connectorType := connector["type"].(string)
+		if !needsRedirectURI(connectorType) {
+			continue
+		}
+		connectorCfg, ok := connector["config"].(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("malformed Dex configuration found")
+		}
+		connectorCfg["redirectURI"] = dexRedirectURL
+		connector["config"] = connectorCfg
+		connectors[i] = connector
+	}
+	dexCfg["connectors"] = connectors
+	return yaml.Marshal(dexCfg)
+}
+
+// needsRedirectURI returns whether or not the given connector type needs a redirectURI
+// Update this list as necessary, as new connectors are added
+// https://github.com/dexidp/dex/tree/master/Documentation/connectors
+func needsRedirectURI(connectorType string) bool {
+	switch connectorType {
+	case "oidc", "saml", "microsoft", "linkedin", "gitlab", "github", "bitbucket-cloud", "openshift":
+		return true
+	}
+	return false
 }

@@ -3,7 +3,6 @@ module github.com/devtron-labs/authenticator
 go 1.16
 
 require (
-	github.com/caarlos0/env v3.5.0+incompatible // indirect
 	github.com/caarlos0/env/v6 v6.7.2
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -24,6 +23,7 @@ require (
 	google.golang.org/grpc v1.31.0
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 	k8s.io/api v0.0.0-20191004102349-159aefb8556b
 	k8s.io/apimachinery v0.0.0-20190816221834-a9f1d8a9c101
 	k8s.io/client-go v11.0.1-0.20190820062731-7e43eff7c80a+incompatible
