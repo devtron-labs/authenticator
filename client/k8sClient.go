@@ -158,6 +158,9 @@ func (impl *K8sClient) GenerateDexConfigYAML(settings *DexConfig) ([]byte, error
 			return nil, fmt.Errorf("failed to unmarshal dex.config from configmap: %v", err)
 		}
 	}
+	if dexCfg == nil {
+		dexCfg = make(map[string]interface{})
+	}
 	issuer, err := settings.getDexProxyUrl()
 	if err != nil {
 		return nil, fmt.Errorf("failed to find issuer url: %v", err)
