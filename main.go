@@ -54,7 +54,7 @@ func main() {
 
 	dexCfgBytes, err := client.GenerateDexConfigYAML(dexConfig)
 	if err != nil {
-		panic(err)
+		fmt.Println("dex config not ready, waiting ......")
 	}
 	if len(dexCfgBytes) == 0 {
 		print("dex is not configured")
