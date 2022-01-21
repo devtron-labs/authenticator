@@ -115,6 +115,8 @@ const (
 	CallbackEndpoint          = "/auth/callback"
 	settingDexConfigKey       = "dex.config"
 	DexCallbackEndpoint       = "/api/dex/callback"
+	initialPasswordLength     = 16
+	initialPasswordSecretName = "devtron-secret"
 )
 
 func (impl *K8sClient) GetServerSettings() (*DexConfig, error) {
@@ -122,6 +124,12 @@ func (impl *K8sClient) GetServerSettings() (*DexConfig, error) {
 	secret, cm, err := impl.GetArgoConfig()
 	if err != nil {
 		return nil, err
+	}
+	if secret.Data == nil {
+		secret.Data = make(map[string][]byte)
+	}
+	if cm.Data == nil {
+		cm.Data = make(map[string]string)
 	}
 	if settingServerSignatur, ok := secret.Data[SettingServerSignatureKey]; ok {
 		cfg.ServerSecret = string(settingServerSignatur)
@@ -144,9 +152,11 @@ func (impl *K8sClient) GenerateDexConfigYAML(settings *DexConfig) ([]byte, error
 		return nil, fmt.Errorf("failed to infer redirect url from config: %v", err)
 	}
 	var dexCfg map[string]interface{}
-	err = yaml.Unmarshal([]byte(settings.DexConfigRaw), &dexCfg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal dex.config from configmap: %v", err)
+	if len(settings.DexConfigRaw) > 0 {
+		err = yaml.Unmarshal([]byte(settings.DexConfigRaw), &dexCfg)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal dex.config from configmap: %v", err)
+		}
 	}
 	issuer, err := settings.getDexProxyUrl()
 	if err != nil {
