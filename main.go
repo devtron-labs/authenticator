@@ -65,12 +65,10 @@ func main() {
 		log.Println("error in generating dex conf ", err)
 	}
 	for {
+		log.Println("starting dex ")
 		var cmd *exec.Cmd
-		if err != nil {
-			fmt.Println("dex config not ready, waiting ......")
-		}
 		if len(dexCfgBytes) == 0 {
-			print("dex is not configured")
+			log.Println("dex is not configured")
 		} else {
 			err = ioutil.WriteFile("/tmp/dex.yaml", dexCfgBytes, 0644)
 			if err != nil {
@@ -83,6 +81,7 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
+			log.Println("dex started ")
 		}
 		configUpdated, err := client.ConfigUpdateNotify()
 		if err != nil {
@@ -91,6 +90,7 @@ func main() {
 		// loop until the dex config changes
 		for {
 			updated := <-configUpdated
+			log.Println("config update received")
 			if updated {
 				newDexCfgBytes, err := generateDexConf(client)
 				if err != nil {
