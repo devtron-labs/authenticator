@@ -23,9 +23,14 @@ import (
 	"github.com/caarlos0/env/v6"
 	"gopkg.in/yaml.v3"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
+	kubeinformers "k8s.io/client-go/informers"
+
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	"os/user"
 	"path/filepath"
@@ -236,4 +241,60 @@ func needsRedirectURI(connectorType string) bool {
 		return true
 	}
 	return false
+}
+
+func (impl *K8sClient) ConfigUpdateNotify() (chan bool, error) {
+	clusterClient, err := kubernetes.NewForConfig(impl.config)
+	if err != nil {
+		return nil, err
+	}
+	informerFactory := kubeinformers.NewSharedInformerFactoryWithOptions(clusterClient, time.Minute, kubeinformers.WithNamespace(ArgocdNamespaceName))
+	cmInformenr := informerFactory.Core().V1().ConfigMaps()
+	secretInformer := informerFactory.Core().V1().Secrets()
+	chanConfigUpdate := make(chan bool)
+	tryNotify := func() {
+		fmt.Println("setting updated")
+		chanConfigUpdate <- true
+	}
+	now := time.Now()
+	cmInformenr.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			if metaObj, ok := obj.(metav1.Object); ok {
+				if metaObj.GetCreationTimestamp().After(now) {
+					tryNotify()
+				}
+			}
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			oldMeta, oldOk := oldObj.(metav1.Common)
+			newMeta, newOk := newObj.(metav1.Common)
+			if oldOk && newOk && oldMeta.GetResourceVersion() != newMeta.GetResourceVersion() {
+				tryNotify()
+			}
+		},
+		DeleteFunc: func(obj interface{}) {
+
+		},
+	})
+	secretInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			if metaObj, ok := obj.(metav1.Object); ok {
+				if metaObj.GetCreationTimestamp().After(now) {
+					tryNotify()
+				}
+			}
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			oldMeta, oldOk := oldObj.(metav1.Common)
+			newMeta, newOk := newObj.(metav1.Common)
+			if oldOk && newOk && oldMeta.GetResourceVersion() != newMeta.GetResourceVersion() {
+				tryNotify()
+			}
+		},
+		DeleteFunc: func(obj interface{}) {
+
+		},
+	})
+	informerFactory.Start(wait.NeverStop)
+	return chanConfigUpdate, nil
 }

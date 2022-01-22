@@ -32,51 +32,89 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"runtime"
+	"syscall"
 )
 
-func main() {
-	dexServerAddress := flag.String("dexServerAddress", "http://127.0.0.1:5556", "dex endpoint")
-	dexCLIClientID := flag.String("dexCLIClientID", "argo-cd", "dex clinet id")
-	flag.Parse()
+var (
+	dexServerAddress *string
+	dexCLIClientID   *string
+)
 
-	client, err := client2.NewK8sClient(new(client2.RuntimeConfig))
-	if err != nil {
-		panic(err)
-	}
+func generateDexConf(client *client2.K8sClient) ([]byte, error) {
 	dexConfig, err := client.GetServerSettings()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	dexConfig.DexServerAddress = *dexServerAddress
 	dexConfig.DexClientID = *dexCLIClientID
 	dexConfig.UserSessionDurationSeconds = 10000
-
 	dexCfgBytes, err := client.GenerateDexConfigYAML(dexConfig)
-	if err != nil {
-		fmt.Println("dex config not ready, waiting ......")
-	}
-	if len(dexCfgBytes) == 0 {
-		print("dex is not configured")
-	} else {
-		err = ioutil.WriteFile("/tmp/dex.yaml", dexCfgBytes, 0644)
-		if err != nil {
-			panic(err)
-		}
-		cmd := exec.Command("dex", "serve", "/tmp/dex.yaml")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err = cmd.Start()
-		if err != nil {
-			panic(err)
-		}
-	}
-	forever()
+	return dexCfgBytes, err
 }
 
-func forever() {
+func main() {
+	dexServerAddress = flag.String("dexServerAddress", "http://127.0.0.1:5556", "dex endpoint")
+	dexCLIClientID = flag.String("dexCLIClientID", "argo-cd", "dex clinet id")
+	flag.Parse()
+	client, err := client2.NewK8sClient(new(client2.RuntimeConfig))
+	if err != nil {
+		log.Fatal(err)
+	}
+	dexCfgBytes, err := generateDexConf(client)
+	if err != nil {
+		log.Fatal(err)
+	}
 	for {
-		runtime.Gosched()
+		var cmd *exec.Cmd
+		if err != nil {
+			fmt.Println("dex config not ready, waiting ......")
+		}
+		if len(dexCfgBytes) == 0 {
+			print("dex is not configured")
+		} else {
+			err = ioutil.WriteFile("/tmp/dex.yaml", dexCfgBytes, 0644)
+			if err != nil {
+				panic(err)
+			}
+			cmd = exec.Command("dex", "serve", "/tmp/dex.yaml")
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			err = cmd.Start()
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+		configUpdated, err := client.ConfigUpdateNotify()
+		if err != nil {
+			log.Println("config update err", err)
+		}
+		// loop until the dex config changes
+		for {
+			updated := <-configUpdated
+			if updated {
+				newDexCfgBytes, err := generateDexConf(client)
+				if err != nil {
+					log.Println("error in generating dex conf", err)
+					continue
+				}
+				if string(dexCfgBytes) != string(newDexCfgBytes) {
+					log.Println("config modified reloading")
+					if cmd != nil && cmd.Process != nil {
+						err = cmd.Process.Signal(syscall.SIGTERM)
+						if err != nil {
+							log.Fatal(err)
+						}
+						_, err = cmd.Process.Wait()
+						if err != nil {
+							log.Fatal(err)
+						}
+					}
+					break
+				} else {
+					log.Println("config not modified")
+				}
+			}
+		}
 	}
 }
 func runWeb() {
