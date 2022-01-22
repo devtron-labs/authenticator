@@ -60,11 +60,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	dexCfgBytes, err := generateDexConf(client)
-	if err != nil {
-		log.Println("error in generating dex conf ", err)
-	}
 	for {
+		dexCfgBytes, err := generateDexConf(client)
+		if err != nil {
+			log.Println("error in generating dex conf ", err)
+		}
 		log.Println("starting dex ")
 		var cmd *exec.Cmd
 		if len(dexCfgBytes) == 0 {
