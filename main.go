@@ -62,7 +62,7 @@ func main() {
 	}
 	dexCfgBytes, err := generateDexConf(client)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("error in generating dex conf ", err)
 	}
 	for {
 		var cmd *exec.Cmd
