@@ -88,6 +88,10 @@ func getKubeConfig(devMode LocalDevMode) (*rest.Config, error) {
 	}
 }
 
+func (impl *K8sClient) GetRestClient() (*kubernetes.Clientset, error) {
+	return kubernetes.NewForConfig(impl.config)
+}
+
 func (impl *K8sClient) GetArgoConfig() (secret *v1.Secret, cm *v1.ConfigMap, err error) {
 	clientSet, err := kubernetes.NewForConfig(impl.config)
 	if err != nil {
@@ -112,16 +116,17 @@ const (
 	SettingAdminEnabledKey       = "admin.enabled"
 	SettingAdminTokensKey        = "admin.tokens"
 
-	SettingServerSignatureKey = "server.secretkey"
-	settingURLKey             = "url"
-	ArgoCDConfigMapName       = "argocd-cm"
-	ArgoCDSecretName          = "argocd-secret"
-	ArgocdNamespaceName       = "devtroncd"
-	CallbackEndpoint          = "/auth/callback"
-	settingDexConfigKey       = "dex.config"
-	DexCallbackEndpoint       = "/api/dex/callback"
-	initialPasswordLength     = 16
-	initialPasswordSecretName = "devtron-secret"
+	SettingServerSignatureKey  = "server.secretkey"
+	settingURLKey              = "url"
+	ArgoCDConfigMapName        = "argocd-cm"
+	ArgoCDSecretName           = "argocd-secret"
+	ArgocdNamespaceName        = "devtroncd"
+	CallbackEndpoint           = "/auth/callback"
+	settingDexConfigKey        = "dex.config"
+	DexCallbackEndpoint        = "/api/dex/callback"
+	InitialPasswordLength      = 16
+	InitialPasswordSecretName  = "devtron-secret"
+	InitialPasswordSecretField = "ACD_PASSWORD"
 )
 
 func (impl *K8sClient) GetServerSettings() (*DexConfig, error) {

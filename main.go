@@ -25,6 +25,7 @@ import (
 	"fmt"
 	client2 "github.com/devtron-labs/authenticator/client"
 	"github.com/devtron-labs/authenticator/middleware"
+	kube "github.com/devtron-labs/authenticator/util"
 	"github.com/gorilla/mux"
 	"io"
 	"io/ioutil"
@@ -59,6 +60,10 @@ func main() {
 	client, err := client2.NewK8sClient(new(client2.RuntimeConfig))
 	if err != nil {
 		log.Fatal(err)
+	}
+	err = kube.InitialiseSettings(client)
+	if err != nil {
+		log.Fatal("error in initialising setting", err)
 	}
 	for {
 		dexCfgBytes, err := generateDexConf(client)
