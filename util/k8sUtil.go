@@ -71,6 +71,9 @@ func (ku *KubeUtil) CreateOrUpdateSecret(ns string, name string, update updateFn
 // CreateOrUpdateSecretField creates or updates a secret name in namespace ns, with given value for given field
 func (ku *KubeUtil) CreateOrUpdateSecretField(ns string, name string, field string, value string) error {
 	err := ku.CreateOrUpdateSecret(ns, name, func(s *apiv1.Secret, new bool) error {
+		if s.Data == nil {
+			s.Data = make(map[string][]byte)
+		}
 		s.Data[field] = []byte(value)
 		return nil
 	})

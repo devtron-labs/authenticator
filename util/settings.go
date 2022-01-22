@@ -42,6 +42,9 @@ func InitialiseSettings(k8sClient *client.K8sClient) error {
 	}
 	passwordTime := time.Now()
 	err = kubeutil.CreateOrUpdateSecret(client.ArgocdNamespaceName, client.ArgoCDSecretName, func(s *v1.Secret, new bool) error {
+		if s.Data == nil {
+			s.Data = make(map[string][]byte)
+		}
 		if newPassword {
 			s.Data[client.SettingAdminPasswordHashKey] = []byte(hashedPassword)
 			s.Data[client.SettingAdminPasswordMtimeKey] = []byte(passwordTime.Format(time.RFC3339))
