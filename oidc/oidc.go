@@ -114,6 +114,22 @@ type ClientApp struct {
 	RedirectUrlSanitiser RedirectUrlSanitiser
 }
 
+func (a *ClientApp) UpdateConfig(c *ClientApp) {
+	a.provider = c.provider
+	a.settings = c.settings
+	a.client = c.client
+	a.issuerURL = c.issuerURL
+	a.redirectURI = c.redirectURI
+	a.clientID = c.clientID
+	a.clientSecret = c.clientSecret
+	a.baseHRef = c.baseHRef
+	a.client = c.client
+	a.secureCookie = c.secureCookie
+	a.cache = c.cache
+	a.userVerifier = c.userVerifier
+	a.RedirectUrlSanitiser = c.RedirectUrlSanitiser
+}
+
 type RedirectUrlSanitiser func(url string) string
 type UserVerifier func(email string) bool
 
@@ -333,11 +349,6 @@ func isValidRedirectURL(redirectURL string, allowedURLs []string) bool {
 	}
 	// No match - redirect URL is not allowed
 	return false
-}
-
-func (a *ClientApp) UpdateConfig(c *ClientApp) {
-	a.provider = c.provider
-	a.settings = c.settings
 }
 
 // HandleLogin formulates the proper OAuth2 URL (auth code or implicit) and redirects the user to
