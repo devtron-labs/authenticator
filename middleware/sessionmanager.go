@@ -64,9 +64,10 @@ var (
 )
 
 // NewSessionManager creates a new session manager from Argo CD settings
-func NewSessionManager(settings *oidc.Settings, config *client.DexConfig) *SessionManager {
+func NewSessionManager(settings *oidc.Settings, config *client.DexConfig, apiTokenSecretStore *apiTokenAuth.ApiTokenSecretStore) *SessionManager {
 	s := SessionManager{
-		settings: settings,
+		settings:            settings,
+		apiTokenSecretStore: apiTokenSecretStore,
 	}
 	s.client = &http.Client{
 		Transport: &http.Transport{
@@ -186,7 +187,6 @@ func (mgr *SessionManager) ParseApiToken(tokenString string) (jwt.Claims, error)
 	}
 	return token.Claims, nil
 }
-
 
 // VerifyToken verifies if a token is correct. Tokens can be issued either from us or by an IDP.
 // We choose how to verify based on the issuer.
