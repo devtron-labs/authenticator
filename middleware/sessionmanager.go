@@ -20,11 +20,13 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	apiTokenAuth "github.com/devtron-labs/authenticator/apiToken"
 	"github.com/devtron-labs/authenticator/client"
 	jwt2 "github.com/devtron-labs/authenticator/jwt"
 	"github.com/devtron-labs/authenticator/oidc"
-	jwt "github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v4"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"net"
@@ -34,14 +36,18 @@ import (
 
 // SessionManager generates and validates JWT tokens for login sessions.
 type SessionManager struct {
-	settings *oidc.Settings
-	client   *http.Client
-	prov     oidc.Provider
+	settings            *oidc.Settings
+	client              *http.Client
+	prov                oidc.Provider
+	apiTokenSecretStore *apiTokenAuth.ApiTokenSecretStore
 }
 
 const (
 	// SessionManagerClaimsIssuer fills the "iss" field of the token.
 	SessionManagerClaimsIssuer = "argocd"
+
+	// ApiTokenClaimIssuer is the issuer who generated api-token for APIs
+	ApiTokenClaimIssuer = "apiTokenIssuer"
 
 	// invalidLoginError, for security purposes, doesn't say whether the username or password was invalid.  This does not mitigate the potential for timing attacks to determine which is which.
 	invalidLoginError         = "Invalid username or password"
@@ -182,6 +188,23 @@ func (mgr *SessionManager) Parse(tokenString string) (jwt.Claims, error) {
 	return token.Claims, nil
 }
 
+// ParseApiToken tries to parse the provided string and returns the token claims for api-token user.
+func (mgr *SessionManager) ParseApiToken(tokenString string) (jwt.Claims, error) {
+	var claims jwt.MapClaims
+
+	token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(mgr.apiTokenSecretStore.Secret), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	if !token.Valid {
+		return nil, errors.New("token is invalid")
+	}
+	return token.Claims, nil
+}
+
 // VerifyToken verifies if a token is correct. Tokens can be issued either from us or by an IDP.
 // We choose how to verify based on the issuer.
 func (mgr *SessionManager) VerifyToken(tokenString string) (jwt.Claims, error) {
@@ -197,6 +220,8 @@ func (mgr *SessionManager) VerifyToken(tokenString string) (jwt.Claims, error) {
 	case SessionManagerClaimsIssuer:
 		// Argo CD signed token
 		return mgr.Parse(tokenString)
+	case ApiTokenClaimIssuer:
+		return mgr.ParseApiToken(tokenString)
 	default:
 		// IDP signed token
 		prov, err := mgr.provider()
