@@ -17,7 +17,7 @@ func InitialiseSettings(k8sClient *client.K8sClient) error {
 		return err
 	}
 	kubeutil := NewKubeUtil(restClient)
-	secret, _, err := k8sClient.GetArgoConfig()
+	secret, _, err := k8sClient.GetDevtronConfig()
 	if err != nil {
 		return err
 	}
@@ -34,14 +34,14 @@ func InitialiseSettings(k8sClient *client.K8sClient) error {
 		}
 		initialPassword := string(randBytes)
 		hashedPassword, err = passwordutil.HashPassword(initialPassword)
-		err = kubeutil.CreateOrUpdateSecretField(client.ArgocdNamespaceName, client.InitialPasswordSecretName, client.InitialPasswordSecretField, initialPassword)
+		err = kubeutil.CreateOrUpdateSecretField(client.DevtronDefaultNamespaceName, client.DevtronSecretName, client.SettingAdminPasswordHashKey, initialPassword)
 		if err != nil {
 			return err
 		}
 		newPassword = true
 	}
 	passwordTime := time.Now()
-	err = kubeutil.CreateOrUpdateSecret(client.ArgocdNamespaceName, client.ArgoCDSecretName, func(s *v1.Secret, new bool) error {
+	err = kubeutil.CreateOrUpdateSecret(client.DevtronDefaultNamespaceName, client.DevtronConfigMapName, func(s *v1.Secret, new bool) error {
 		if s.Data == nil {
 			s.Data = make(map[string][]byte)
 		}
