@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	apiTokenAuth "github.com/devtron-labs/authenticator/apiToken"
 	client2 "github.com/devtron-labs/authenticator/client"
 	"github.com/devtron-labs/authenticator/middleware"
 	kube "github.com/devtron-labs/authenticator/util"
@@ -162,7 +163,7 @@ func runWeb() {
 		fmt.Println(err)
 		return
 	}
-	sessionManager := middleware.NewSessionManager(settings, dexConfig)
+	sessionManager := middleware.NewSessionManager(settings, dexConfig, apiTokenAuth.InitApiTokenSecretStore())
 	loginService := middleware.NewUserLogin(sessionManager, client)
 
 	// dex setting ends

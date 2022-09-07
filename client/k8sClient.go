@@ -18,6 +18,7 @@
 package client
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"github.com/caarlos0/env/v6"
@@ -97,11 +98,11 @@ func (impl *K8sClient) GetArgoConfig() (secret *v1.Secret, cm *v1.ConfigMap, err
 	if err != nil {
 		return nil, nil, err
 	}
-	secret, err = clientSet.CoreV1().Secrets(ArgocdNamespaceName).Get(ArgoCDSecretName, v12.GetOptions{})
+	secret, err = clientSet.CoreV1().Secrets(ArgocdNamespaceName).Get(context.Background(), ArgoCDSecretName, v12.GetOptions{})
 	if err != nil {
 		return nil, nil, err
 	}
-	cm, err = clientSet.CoreV1().ConfigMaps(ArgocdNamespaceName).Get(ArgoCDConfigMapName, v12.GetOptions{})
+	cm, err = clientSet.CoreV1().ConfigMaps(ArgocdNamespaceName).Get(context.Background(), ArgoCDConfigMapName, v12.GetOptions{})
 	if err != nil {
 		return nil, nil, err
 	}

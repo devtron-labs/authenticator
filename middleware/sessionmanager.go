@@ -64,9 +64,10 @@ var (
 )
 
 // NewSessionManager creates a new session manager from Argo CD settings
-func NewSessionManager(settings *oidc.Settings, config *client.DexConfig) *SessionManager {
+func NewSessionManager(settings *oidc.Settings, config *client.DexConfig, apiTokenSecretStore *apiTokenAuth.ApiTokenSecretStore) *SessionManager {
 	s := SessionManager{
-		settings: settings,
+		settings:            settings,
+		apiTokenSecretStore: apiTokenSecretStore,
 	}
 	s.client = &http.Client{
 		Transport: &http.Transport{
