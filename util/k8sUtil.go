@@ -3,6 +3,7 @@ package kube
 //code copied from argocd
 
 import (
+	"golang.org/x/net/context"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,7 +34,7 @@ func (ku *KubeUtil) CreateOrUpdateSecret(ns string, name string, update updateFn
 	var err error
 	var new bool
 
-	s, err = ku.client.CoreV1().Secrets(ns).Get(name, metav1.GetOptions{})
+	s, err = ku.client.CoreV1().Secrets(ns).Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			return err
@@ -59,9 +60,9 @@ func (ku *KubeUtil) CreateOrUpdateSecret(ns string, name string, update updateFn
 	}
 
 	if new {
-		_, err = ku.client.CoreV1().Secrets(ns).Create(s) //(ku.ctx, s, metav1.CreateOptions{})
+		_, err = ku.client.CoreV1().Secrets(ns).Create(context.Background(), s, metav1.CreateOptions{}) //(ku.ctx, s, metav1.CreateOptions{})
 	} else {
-		_, err = ku.client.CoreV1().Secrets(ns).Update(s) //(ku.ctx, s, metav1.UpdateOptions{})
+		_, err = ku.client.CoreV1().Secrets(ns).Update(context.Background(), s, metav1.UpdateOptions{}) //(ku.ctx, s, metav1.UpdateOptions{})
 	}
 
 	return err
