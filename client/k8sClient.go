@@ -127,6 +127,7 @@ const (
 	DevtronSecretName           = "devtron-secret"
 	DevtronConfigMapName        = "devtron-cm"
 	AdminPlainBase64DPassword   = "admin.base64password"
+	ArgocdSecretName            = "argocd-secret"
 )
 
 func (impl *K8sClient) GetServerSettings() (*DexConfig, error) {
