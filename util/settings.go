@@ -41,7 +41,7 @@ func InitialiseSettings(k8sClient *client.K8sClient) error {
 		newPassword = true
 	}
 	passwordTime := time.Now()
-	err = kubeutil.CreateOrUpdateSecret(client.DevtronDefaultNamespaceName, client.DevtronConfigMapName, func(s *v1.Secret, new bool) error {
+	err = kubeutil.CreateOrUpdateSecret(client.DevtronDefaultNamespaceName, client.DevtronSecretName, func(s *v1.Secret, new bool) error {
 		if s.Data == nil {
 			s.Data = make(map[string][]byte)
 		}
