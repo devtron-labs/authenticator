@@ -126,6 +126,7 @@ const (
 	InitialPasswordLength       = 16
 	DevtronSecretName           = "devtron-secret"
 	DevtronConfigMapName        = "devtron-cm"
+	AdminPlainBase64DPassword   = "admin.base64password"
 )
 
 func (impl *K8sClient) GetServerSettings() (*DexConfig, error) {
