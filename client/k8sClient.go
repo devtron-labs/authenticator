@@ -109,6 +109,22 @@ func (impl *K8sClient) GetDevtronConfig() (secret *v1.Secret, cm *v1.ConfigMap, 
 	return secret, cm, nil
 }
 
+func (impl *K8sClient) GetArgocdConfig() (secret *v1.Secret, cm *v1.ConfigMap, err error) {
+	clientSet, err := kubernetes.NewForConfig(impl.config)
+	if err != nil {
+		return nil, nil, err
+	}
+	secret, err = clientSet.CoreV1().Secrets(DevtronDefaultNamespaceName).Get(context.Background(), ArgocdSecretName, v12.GetOptions{})
+	if err != nil {
+		return nil, nil, err
+	}
+	cm, err = clientSet.CoreV1().ConfigMaps(DevtronDefaultNamespaceName).Get(context.Background(), ArgocdConfigMapName, v12.GetOptions{})
+	if err != nil {
+		return nil, nil, err
+	}
+	return secret, cm, nil
+}
+
 // argocd specific conf
 const (
 	SettingAdminPasswordHashKey = "admin.password"
@@ -118,16 +134,18 @@ const (
 	SettingAdminTokensKey        = "admin.tokens"
 
 	SettingServerSignatureKey   = "server.secretkey"
-	settingURLKey               = "url"
+	SettingURLKey               = "url"
 	DevtronDefaultNamespaceName = "devtroncd"
 	CallbackEndpoint            = "/auth/callback"
-	settingDexConfigKey         = "dex.config"
+	SettingDexConfigKey         = "dex.config"
 	DexCallbackEndpoint         = "/api/dex/callback"
 	InitialPasswordLength       = 16
 	DevtronSecretName           = "devtron-secret"
 	DevtronConfigMapName        = "devtron-cm"
 	AdminPlainBase64DPassword   = "admin.base64password"
+	ArgocdConfigMapName         = "argocd-cm"
 	ArgocdSecretName            = "argocd-secret"
+	SettingAdminAcdPasswordKey  = "ACD_PASSWORD"
 )
 
 func (impl *K8sClient) GetServerSettings() (*DexConfig, error) {
@@ -145,15 +163,17 @@ func (impl *K8sClient) GetServerSettings() (*DexConfig, error) {
 	if settingServerSignatur, ok := secret.Data[SettingServerSignatureKey]; ok {
 		cfg.ServerSecret = string(settingServerSignatur)
 	}
-	if settingURL, ok := cm.Data[settingURLKey]; ok {
-		cfg.Url = settingURL
+	if settingURLByte, ok := secret.Data[SettingURLKey]; ok {
+		cfg.Url = string(settingURLByte)
 	}
 	if adminPasswordMtimeBytes, ok := secret.Data[SettingAdminPasswordMtimeKey]; ok {
 		if mTime, err := time.Parse(time.RFC3339, string(adminPasswordMtimeBytes)); err == nil {
 			cfg.AdminPasswordMtime = mTime
 		}
 	}
-	cfg.DexConfigRaw = cm.Data[settingDexConfigKey]
+	if dexConfigBytes, ok := secret.Data[SettingDexConfigKey]; ok {
+		cfg.DexConfigRaw = string(dexConfigBytes)
+	}
 	return cfg, nil
 }
 
