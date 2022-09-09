@@ -158,7 +158,7 @@ func MigrateDexConfigFromAcdToDevtronSecret(k8sClient *client.K8sClient) (bool, 
 		}
 		operationSuccess = true
 	}
-	if !operationSuccess {
+	if updateRequired && !operationSuccess {
 		return false, fmt.Errorf("unable to update devtron secret")
 	}
 	return true, nil
