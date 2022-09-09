@@ -35,7 +35,7 @@ func InitialiseSettings(k8sClient *client.K8sClient) error {
 		}
 		initialPassword := string(randBytes)
 		hashedPassword, err = passwordutil.HashPassword(initialPassword)
-		err = kubeutil.CreateOrUpdateSecretField(client.DevtronDefaultNamespaceName, client.DevtronSecretName, client.AdminPlainBase64DPassword, initialPassword)
+		err = kubeutil.CreateOrUpdateSecretField(client.DevtronDefaultNamespaceName, client.DevtronSecretName, client.ADMIN_USER_PASSWORD, initialPassword)
 		if err != nil {
 			return err
 		}
@@ -49,25 +49,6 @@ func InitialiseSettings(k8sClient *client.K8sClient) error {
 		if newPassword {
 			s.Data[client.SettingAdminPasswordHashKey] = []byte(hashedPassword)
 			s.Data[client.SettingAdminPasswordMtimeKey] = []byte(passwordTime.Format(time.RFC3339))
-		}
-		signature := s.Data[client.SettingServerSignatureKey]
-		if len(signature) == 0 {
-			signature, err := MakeSignature(32)
-			if err != nil {
-				return err
-			}
-			s.Data[client.SettingServerSignatureKey] = signature
-		}
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-
-	//this should not be the part of authenticator, this has to move to orchestrator init or other function.
-	err = kubeutil.CreateOrUpdateSecret(client.DevtronDefaultNamespaceName, client.ArgocdSecretName, func(s *v1.Secret, new bool) error {
-		if s.Data == nil {
-			s.Data = make(map[string][]byte)
 		}
 		signature := s.Data[client.SettingServerSignatureKey]
 		if len(signature) == 0 {
@@ -141,8 +122,8 @@ func MigrateDexConfigFromAcdToDevtronSecret(k8sClient *client.K8sClient) (bool, 
 			devtronSecret.Data[client.SettingServerSignatureKey] = acdSecret.Data[client.SettingServerSignatureKey]
 			updateRequired = true
 		}
-		if _, ok := devtronSecret.Data[client.AdminPlainBase64DPassword]; !ok {
-			devtronSecret.Data[client.AdminPlainBase64DPassword] = devtronSecret.Data[client.SettingAdminAcdPasswordKey]
+		if _, ok := devtronSecret.Data[client.ADMIN_USER_PASSWORD]; !ok {
+			devtronSecret.Data[client.ADMIN_USER_PASSWORD] = devtronSecret.Data[client.SettingAdminAcdPasswordKey]
 			updateRequired = true
 		}
 
