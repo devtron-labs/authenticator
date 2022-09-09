@@ -62,6 +62,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	_, err = kube.MigrateDexConfigFromAcdToDevtronSecret(client)
+	if err != nil {
+		log.Fatal("error in migrating dex config from acd to devtron", err)
+	}
+
 	err = kube.InitialiseSettings(client)
 	if err != nil {
 		log.Fatal("error in initialising setting", err)
