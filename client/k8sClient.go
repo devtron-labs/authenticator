@@ -145,7 +145,7 @@ const (
 
 	ArgocdConfigMapName        = "argocd-cm"
 	ArgocdSecretName           = "argocd-secret"
-	ADMIN_USER_PASSWORD        = "ADMIN_USER_PASSWORD"
+	ADMIN_PASSWORD             = "ADMIN_PASSWORD"
 	SettingAdminAcdPasswordKey = "ACD_PASSWORD"
 )
 

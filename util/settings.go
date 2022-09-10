@@ -35,7 +35,7 @@ func InitialiseSettings(k8sClient *client.K8sClient) error {
 		}
 		initialPassword := string(randBytes)
 		hashedPassword, err = passwordutil.HashPassword(initialPassword)
-		err = kubeutil.CreateOrUpdateSecretField(client.DevtronDefaultNamespaceName, client.DevtronSecretName, client.ADMIN_USER_PASSWORD, initialPassword)
+		err = kubeutil.CreateOrUpdateSecretField(client.DevtronDefaultNamespaceName, client.DevtronSecretName, client.ADMIN_PASSWORD, initialPassword)
 		if err != nil {
 			return err
 		}
@@ -122,8 +122,8 @@ func MigrateDexConfigFromAcdToDevtronSecret(k8sClient *client.K8sClient) (bool, 
 			devtronSecret.Data[client.SettingServerSignatureKey] = acdSecret.Data[client.SettingServerSignatureKey]
 			updateRequired = true
 		}
-		if _, ok := devtronSecret.Data[client.ADMIN_USER_PASSWORD]; !ok {
-			devtronSecret.Data[client.ADMIN_USER_PASSWORD] = devtronSecret.Data[client.SettingAdminAcdPasswordKey]
+		if _, ok := devtronSecret.Data[client.ADMIN_PASSWORD]; !ok {
+			devtronSecret.Data[client.ADMIN_PASSWORD] = devtronSecret.Data[client.SettingAdminAcdPasswordKey]
 			updateRequired = true
 		}
 
