@@ -93,16 +93,32 @@ func (impl *K8sClient) GetRestClient() (*kubernetes.Clientset, error) {
 	return kubernetes.NewForConfig(impl.config)
 }
 
-func (impl *K8sClient) GetArgoConfig() (secret *v1.Secret, cm *v1.ConfigMap, err error) {
+func (impl *K8sClient) GetArgocdConfig() (secret *v1.Secret, cm *v1.ConfigMap, err error) {
 	clientSet, err := kubernetes.NewForConfig(impl.config)
 	if err != nil {
 		return nil, nil, err
 	}
-	secret, err = clientSet.CoreV1().Secrets(ArgocdNamespaceName).Get(context.Background(), ArgoCDSecretName, v12.GetOptions{})
+	secret, err = clientSet.CoreV1().Secrets(DevtronDefaultNamespaceName).Get(context.Background(), ArgocdSecretName, v12.GetOptions{})
 	if err != nil {
 		return nil, nil, err
 	}
-	cm, err = clientSet.CoreV1().ConfigMaps(ArgocdNamespaceName).Get(context.Background(), ArgoCDConfigMapName, v12.GetOptions{})
+	cm, err = clientSet.CoreV1().ConfigMaps(DevtronDefaultNamespaceName).Get(context.Background(), ArgocdConfigMapName, v12.GetOptions{})
+	if err != nil {
+		return nil, nil, err
+	}
+	return secret, cm, nil
+}
+
+func (impl *K8sClient) GetDevtronConfig() (secret *v1.Secret, cm *v1.ConfigMap, err error) {
+	clientSet, err := kubernetes.NewForConfig(impl.config)
+	if err != nil {
+		return nil, nil, err
+	}
+	secret, err = clientSet.CoreV1().Secrets(DevtronDefaultNamespaceName).Get(context.Background(), DevtronSecretName, v12.GetOptions{})
+	if err != nil {
+		return nil, nil, err
+	}
+	cm, err = clientSet.CoreV1().ConfigMaps(DevtronDefaultNamespaceName).Get(context.Background(), DevtronConfigMapName, v12.GetOptions{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -117,22 +133,25 @@ const (
 	SettingAdminEnabledKey       = "admin.enabled"
 	SettingAdminTokensKey        = "admin.tokens"
 
-	SettingServerSignatureKey  = "server.secretkey"
-	settingURLKey              = "url"
-	ArgoCDConfigMapName        = "argocd-cm"
-	ArgoCDSecretName           = "argocd-secret"
-	ArgocdNamespaceName        = "devtroncd"
-	CallbackEndpoint           = "/auth/callback"
-	settingDexConfigKey        = "dex.config"
-	DexCallbackEndpoint        = "/api/dex/callback"
-	InitialPasswordLength      = 16
-	InitialPasswordSecretName  = "devtron-secret"
-	InitialPasswordSecretField = "ACD_PASSWORD"
+	SettingServerSignatureKey   = "server.secretkey"
+	SettingURLKey               = "url"
+	DevtronDefaultNamespaceName = "devtroncd"
+	CallbackEndpoint            = "/auth/callback"
+	SettingDexConfigKey         = "dex.config"
+	DexCallbackEndpoint         = "/api/dex/callback"
+	InitialPasswordLength       = 16
+	DevtronSecretName           = "devtron-secret"
+	DevtronConfigMapName        = "devtron-cm"
+
+	ArgocdConfigMapName        = "argocd-cm"
+	ArgocdSecretName           = "argocd-secret"
+	ADMIN_PASSWORD             = "ADMIN_PASSWORD"
+	SettingAdminAcdPasswordKey = "ACD_PASSWORD"
 )
 
 func (impl *K8sClient) GetServerSettings() (*DexConfig, error) {
 	cfg := &DexConfig{}
-	secret, cm, err := impl.GetArgoConfig()
+	secret, cm, err := impl.GetDevtronConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -145,15 +164,17 @@ func (impl *K8sClient) GetServerSettings() (*DexConfig, error) {
 	if settingServerSignatur, ok := secret.Data[SettingServerSignatureKey]; ok {
 		cfg.ServerSecret = string(settingServerSignatur)
 	}
-	if settingURL, ok := cm.Data[settingURLKey]; ok {
-		cfg.Url = settingURL
+	if settingURLByte, ok := secret.Data[SettingURLKey]; ok {
+		cfg.Url = string(settingURLByte)
 	}
 	if adminPasswordMtimeBytes, ok := secret.Data[SettingAdminPasswordMtimeKey]; ok {
 		if mTime, err := time.Parse(time.RFC3339, string(adminPasswordMtimeBytes)); err == nil {
 			cfg.AdminPasswordMtime = mTime
 		}
 	}
-	cfg.DexConfigRaw = cm.Data[settingDexConfigKey]
+	if dexConfigBytes, ok := secret.Data[SettingDexConfigKey]; ok {
+		cfg.DexConfigRaw = string(dexConfigBytes)
+	}
 	return cfg, nil
 }
 
@@ -254,7 +275,7 @@ func (impl *K8sClient) ConfigUpdateNotify() (chan bool, error) {
 	if err != nil {
 		return nil, err
 	}
-	informerFactory := kubeinformers.NewSharedInformerFactoryWithOptions(clusterClient, time.Minute, kubeinformers.WithNamespace(ArgocdNamespaceName))
+	informerFactory := kubeinformers.NewSharedInformerFactoryWithOptions(clusterClient, time.Minute, kubeinformers.WithNamespace(DevtronDefaultNamespaceName))
 	cmInformenr := informerFactory.Core().V1().ConfigMaps()
 	secretInformer := informerFactory.Core().V1().Secrets()
 	chanConfigUpdate := make(chan bool)
