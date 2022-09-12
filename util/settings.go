@@ -76,7 +76,7 @@ func MigrateDexConfigFromAcdToDevtronSecret(k8sClient *client.K8sClient) (bool, 
 	if err != nil {
 		return false, err
 	}
-	acdSecret, acdConfigMap, err := k8sClient.GetDevtronConfig()
+	acdSecret, acdConfigMap, err := k8sClient.GetArgocdConfig()
 	if err != nil {
 		return false, err
 	}
