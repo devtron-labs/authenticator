@@ -85,42 +85,34 @@ func MigrateDexConfigFromAcdToDevtronSecret(k8sClient *client.K8sClient) (bool, 
 	updateRequired := false
 	for !operationSuccess && retryCount < 3 {
 		retryCount = retryCount + 1
-		if acdConfigMap.Data == nil && acdSecret.Data == nil {
-			// do nothing if there is no config available on acd config
-			break
-		}
-		if acdConfigMap.Data[client.SettingDexConfigKey] == "" || acdConfigMap.Data[client.SettingURLKey] == "" {
-			// do nothing if there is no dex config or url present on acd config
-			break
-		}
-		if acdSecret.Data[client.SettingAdminPasswordHashKey] == nil || acdSecret.Data[client.SettingAdminPasswordMtimeKey] == nil ||
-			acdSecret.Data[client.SettingServerSignatureKey] == nil {
-			// do nothing if there is no dex related config present on acd secret
-			break
-		}
 		if devtronSecret.Data == nil {
 			data := make(map[string][]byte)
 			devtronSecret.Data = data
 		}
-		if _, ok := devtronSecret.Data[client.SettingDexConfigKey]; !ok {
-			devtronSecret.Data[client.SettingDexConfigKey] = []byte(acdConfigMap.Data[client.SettingDexConfigKey])
-			updateRequired = true
+		if acdConfigMap.Data != nil {
+			if _, ok := devtronSecret.Data[client.SettingDexConfigKey]; !ok {
+				devtronSecret.Data[client.SettingDexConfigKey] = []byte(acdConfigMap.Data[client.SettingDexConfigKey])
+				updateRequired = true
+			}
+			if _, ok := devtronSecret.Data[client.SettingURLKey]; !ok {
+				devtronSecret.Data[client.SettingURLKey] = []byte(acdConfigMap.Data[client.SettingURLKey])
+				updateRequired = true
+			}
 		}
-		if _, ok := devtronSecret.Data[client.SettingURLKey]; !ok {
-			devtronSecret.Data[client.SettingURLKey] = []byte(acdConfigMap.Data[client.SettingURLKey])
-			updateRequired = true
-		}
-		if _, ok := devtronSecret.Data[client.SettingAdminPasswordHashKey]; !ok {
-			devtronSecret.Data[client.SettingAdminPasswordHashKey] = acdSecret.Data[client.SettingAdminPasswordHashKey]
-			updateRequired = true
-		}
-		if _, ok := devtronSecret.Data[client.SettingAdminPasswordMtimeKey]; !ok {
-			devtronSecret.Data[client.SettingAdminPasswordMtimeKey] = acdSecret.Data[client.SettingAdminPasswordMtimeKey]
-			updateRequired = true
-		}
-		if _, ok := devtronSecret.Data[client.SettingServerSignatureKey]; !ok {
-			devtronSecret.Data[client.SettingServerSignatureKey] = acdSecret.Data[client.SettingServerSignatureKey]
-			updateRequired = true
+
+		if acdSecret.Data != nil {
+			if _, ok := devtronSecret.Data[client.SettingAdminPasswordHashKey]; !ok {
+				devtronSecret.Data[client.SettingAdminPasswordHashKey] = acdSecret.Data[client.SettingAdminPasswordHashKey]
+				updateRequired = true
+			}
+			if _, ok := devtronSecret.Data[client.SettingAdminPasswordMtimeKey]; !ok {
+				devtronSecret.Data[client.SettingAdminPasswordMtimeKey] = acdSecret.Data[client.SettingAdminPasswordMtimeKey]
+				updateRequired = true
+			}
+			if _, ok := devtronSecret.Data[client.SettingServerSignatureKey]; !ok {
+				devtronSecret.Data[client.SettingServerSignatureKey] = acdSecret.Data[client.SettingServerSignatureKey]
+				updateRequired = true
+			}
 		}
 		if _, ok := devtronSecret.Data[client.ADMIN_PASSWORD]; !ok {
 			devtronSecret.Data[client.ADMIN_PASSWORD] = devtronSecret.Data[client.SettingAdminAcdPasswordKey]
