@@ -22,7 +22,7 @@ func InitialiseSettings(k8sClient *client.K8sClient) error {
 	if err != nil {
 		return err
 	}
-	secret, _, err := k8sClient.GetDevtronConfig()
+	secret, err := k8sClient.GetDevtronConfig()
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func MigrateDexConfigFromAcdToDevtronSecret(k8sClient *client.K8sClient) (bool, 
 	if err != nil {
 		return false, err
 	}
-	devtronSecret, _, err := k8sClient.GetDevtronConfig()
+	devtronSecret, err := k8sClient.GetDevtronConfig()
 	if err != nil {
 		return false, err
 	}
