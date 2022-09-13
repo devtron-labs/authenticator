@@ -18,6 +18,10 @@ func InitialiseSettings(k8sClient *client.K8sClient) error {
 		return err
 	}
 	kubeutil := NewKubeUtil(restClient)
+	dexConfig, err := client.DexConfigConfigFromEnv()
+	if err != nil {
+		return err
+	}
 	secret, _, err := k8sClient.GetDevtronConfig()
 	if err != nil {
 		return err
@@ -35,14 +39,14 @@ func InitialiseSettings(k8sClient *client.K8sClient) error {
 		}
 		initialPassword := string(randBytes)
 		hashedPassword, err = passwordutil.HashPassword(initialPassword)
-		err = kubeutil.CreateOrUpdateSecretField(client.DevtronDefaultNamespaceName, client.DevtronSecretName, client.ADMIN_PASSWORD, initialPassword)
+		err = kubeutil.CreateOrUpdateSecretField(client.DevtronDefaultNamespaceName, dexConfig.DevtronSecretName, client.ADMIN_PASSWORD, initialPassword)
 		if err != nil {
 			return err
 		}
 		newPassword = true
 	}
 	passwordTime := time.Now()
-	err = kubeutil.CreateOrUpdateSecret(client.DevtronDefaultNamespaceName, client.DevtronSecretName, func(s *v1.Secret, new bool) error {
+	err = kubeutil.CreateOrUpdateSecret(client.DevtronDefaultNamespaceName, dexConfig.DevtronSecretName, func(s *v1.Secret, new bool) error {
 		if s.Data == nil {
 			s.Data = make(map[string][]byte)
 		}
@@ -72,6 +76,10 @@ func MigrateDexConfigFromAcdToDevtronSecret(k8sClient *client.K8sClient) (bool, 
 		return false, err
 	}
 	kubeutil := NewKubeUtil(restClient)
+	dexConfig, err := client.DexConfigConfigFromEnv()
+	if err != nil {
+		return false, err
+	}
 	devtronSecret, _, err := k8sClient.GetDevtronConfig()
 	if err != nil {
 		return false, err
@@ -121,7 +129,7 @@ func MigrateDexConfigFromAcdToDevtronSecret(k8sClient *client.K8sClient) (bool, 
 
 		// here create or update devtron secret and migrate and store config for dex
 		if updateRequired {
-			err = kubeutil.CreateOrUpdateSecret(client.DevtronDefaultNamespaceName, client.DevtronSecretName, func(s *v1.Secret, new bool) error {
+			err = kubeutil.CreateOrUpdateSecret(client.DevtronDefaultNamespaceName, dexConfig.DevtronSecretName, func(s *v1.Secret, new bool) error {
 				if s.Data == nil {
 					s.Data = make(map[string][]byte)
 				}
