@@ -7,6 +7,7 @@ import (
 	passwordutil "github.com/devtron-labs/authenticator/password"
 	v1 "k8s.io/api/core/v1"
 	"math/big"
+	"strconv"
 	"time"
 )
 
@@ -28,6 +29,8 @@ func InitialiseSettings(k8sClient *client.K8sClient) error {
 	}
 	var hashedPassword string
 	newPassword := false
+	oldP := secret.Data[client.ADMIN_PASSWORD]
+	fmt.Println("old password is " + string(oldP) + "length" + strconv.Itoa(len(oldP)))
 	if oldPassword, ok := secret.Data[client.ADMIN_PASSWORD]; !ok && len(oldPassword) == 0 {
 		randBytes := make([]byte, client.InitialPasswordLength)
 		for i := 0; i < client.InitialPasswordLength; i++ {
@@ -38,6 +41,7 @@ func InitialiseSettings(k8sClient *client.K8sClient) error {
 			randBytes[i] = letters[num.Int64()]
 		}
 		initialPassword := string(randBytes)
+		fmt.Println("inintal password" + initialPassword)
 		hashedPassword, err = passwordutil.HashPassword(initialPassword)
 		err = kubeutil.CreateOrUpdateSecretField(client.DevtronDefaultNamespaceName, dexConfig.DevtronSecretName, client.ADMIN_PASSWORD, initialPassword)
 		if err != nil {
