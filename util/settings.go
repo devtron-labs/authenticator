@@ -123,8 +123,11 @@ func MigrateDexConfigFromAcdToDevtronSecret(k8sClient *client.K8sClient) (bool, 
 			}
 		}
 		if _, ok := devtronSecret.Data[client.ADMIN_PASSWORD]; !ok {
-			devtronSecret.Data[client.ADMIN_PASSWORD] = devtronSecret.Data[client.SettingAdminAcdPasswordKey]
-			updateRequired = true
+			oldPassword := devtronSecret.Data[client.SettingAdminAcdPasswordKey]
+			if len(oldPassword) > 0 {
+				devtronSecret.Data[client.ADMIN_PASSWORD] = oldPassword
+				updateRequired = true
+			}
 		}
 
 		// here create or update devtron secret and migrate and store config for dex
