@@ -28,7 +28,7 @@ func InitialiseSettings(k8sClient *client.K8sClient) error {
 	}
 	var hashedPassword string
 	newPassword := false
-	if _, ok := secret.Data[client.SettingAdminPasswordHashKey]; !ok {
+	if _, ok := secret.Data[client.ADMIN_PASSWORD]; !ok {
 		randBytes := make([]byte, client.InitialPasswordLength)
 		for i := 0; i < client.InitialPasswordLength; i++ {
 			num, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
