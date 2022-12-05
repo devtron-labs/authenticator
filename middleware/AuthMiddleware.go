@@ -25,20 +25,15 @@ import (
 	"strings"
 )
 
-const ExternalCiWebhookRouter = "/orchestrator/webhook/ext-ci/"
-
 // Authorizer is a middleware for authorization
 func Authorizer(sessionManager *SessionManager, whitelistChecker func(url string) bool) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
-			isRequestForExtCiWebhook := false
-			if strings.Contains(r.URL.Path, ExternalCiWebhookRouter) {
-				isRequestForExtCiWebhook = true
-			}
 			token := ""
-			if isRequestForExtCiWebhook {
-				// for external ci webhook request will be authorize by api-token
-				token = r.Header.Get("api-token")
+			apiToken := r.Header.Get("api-token")
+			if len(apiToken) > 0 {
+				// for external ci webhook request, will be authorize by api-token
+				token = apiToken
 			} else {
 				cookie, _ := r.Cookie("argocd.token")
 				if cookie != nil {
@@ -59,7 +54,7 @@ func Authorizer(sessionManager *SessionManager, whitelistChecker func(url string
 				_, err := sessionManager.VerifyToken(token)
 				if err != nil {
 					log.Printf("Error verifying token: %+v\n", err)
-					if !isRequestForExtCiWebhook {
+					if len(apiToken) == 0 {
 						http.SetCookie(w, &http.Cookie{Name: "argocd.token", Value: token, Path: "/", MaxAge: -1})
 					}
 					writeResponse(http.StatusUnauthorized, "Unauthorized", w, err)
