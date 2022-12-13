@@ -91,6 +91,10 @@ type DexConfig struct {
 	DevtronSecretName          string `env:"DEVTRON_SECRET_NAME" envDefault:"devtron-secret"`
 }
 
+func (c *DexConfig) GetDexProxyUrl() (string, error) {
+	return c.getDexProxyUrl()
+}
+
 func (c *DexConfig) getDexProxyUrl() (string, error) {
 	u, err := url.Parse(c.Url)
 	if err != nil {
