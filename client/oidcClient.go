@@ -37,7 +37,7 @@ func GetOidcClient(conf *DexConfig, userVerifier oidc.UserVerifier, RedirectUrlS
 }
 
 func GetSettings(conf *DexConfig) (*oidc.Settings, error) {
-	proxyUrl, err := conf.getDexProxyUrl()
+	proxyUrl, err := conf.GetDexProxyUrl()
 	if err != nil {
 		return nil, err
 	}
@@ -92,10 +92,6 @@ type DexConfig struct {
 }
 
 func (c *DexConfig) GetDexProxyUrl() (string, error) {
-	return c.getDexProxyUrl()
-}
-
-func (c *DexConfig) getDexProxyUrl() (string, error) {
 	u, err := url.Parse(c.Url)
 	if err != nil {
 		return "", err
