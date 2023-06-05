@@ -7,7 +7,7 @@ WORKDIR /go/src/github.com/devtron-labs/authenticator
 ADD . /go/src/github.com/devtron-labs/authenticator/
 RUN GOOS=linux make
 
-FROM alpine:3.15.0
+FROM alpine:3.18
 RUN apk add --no-cache ca-certificates
 RUN apk add git --no-cache
 COPY --from=build-env  /go/src/github.com/devtron-labs/authenticator/authenticator .
