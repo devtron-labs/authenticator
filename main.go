@@ -156,7 +156,7 @@ func runWeb() {
 	dexConfig.DexClientID = *dexCLIClientID
 	dexConfig.UserSessionDurationSeconds = 10000
 
-	userVerier := func(email string) bool { return true }
+	userVerier := func(email, clientIp string) bool { return true }
 	redirectUrlSanitiser := func(url string) string { return url }
 	oidcClient, dexProxy, err := client2.GetOidcClient(dexConfig, userVerier, redirectUrlSanitiser)
 	if err != nil {

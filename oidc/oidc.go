@@ -131,7 +131,7 @@ func (a *ClientApp) UpdateConfig(c *ClientApp) {
 }
 
 type RedirectUrlSanitiser func(url string) string
-type UserVerifier func(email string) bool
+type UserVerifier func(email, clientIp string) bool
 
 func GetScopesOrDefault(scopes []string) []string {
 	if len(scopes) == 0 {
@@ -454,7 +454,11 @@ func (a *ClientApp) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	if email == "" && sub == "admin" {
 		email = sub
 	}
-	valid := a.userVerifier(email)
+
+	clientIp := getClientIP(r)
+
+	valid := a.userVerifier(email, clientIp)
+
 	//  end verify user in system
 	if !valid {
 		w.Header().Add("Set-Cookie", "")
@@ -479,6 +483,14 @@ func (a *ClientApp) HandleCallback(w http.ResponseWriter, r *http.Request) {
 		returnUrl = a.RedirectUrlSanitiser(returnUrl)
 		http.Redirect(w, r, returnUrl, http.StatusSeeOther)
 	}
+}
+
+func getClientIP(r *http.Request) string {
+	xForwardedFor := r.Header.Get("X-Forwarded-For")
+	if len(xForwardedFor) > 0 {
+		return xForwardedFor
+	}
+	return r.RemoteAddr
 }
 
 const (
