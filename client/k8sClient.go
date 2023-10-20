@@ -133,15 +133,14 @@ const (
 	SettingAdminPasswordMtimeKey = "admin.passwordMtime"
 	SettingAdminEnabledKey       = "admin.enabled"
 	SettingAdminTokensKey        = "admin.tokens"
-
-	SettingServerSignatureKey = "server.secretkey"
-	SettingURLKey             = "url"
-	CallbackEndpoint          = "/auth/callback"
-	SettingDexConfigKey       = "dex.config"
-	DexCallbackEndpoint       = "/api/dex/callback"
-	InitialPasswordLength     = 16
-	DevtronSecretName         = "devtron-secret"
-	DevtronConfigMapName      = "devtron-cm"
+	SettingServerSignatureKey    = "server.secretkey"
+	SettingURLKey                = "url"
+	CallbackEndpoint             = "/auth/callback"
+	SettingDexConfigKey          = "dex.config"
+	DexCallbackEndpoint          = "/api/dex/callback"
+	InitialPasswordLength        = 16
+	DevtronSecretName            = "devtron-secret"
+	DevtronConfigMapName         = "devtron-cm"
 
 	ArgocdConfigMapName        = "argocd-cm"
 	ArgocdSecretName           = "argocd-secret"
