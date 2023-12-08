@@ -6,7 +6,7 @@ FLAGS=
 GOOS?=darwin
 GIT_COMMIT =$(shell sh -c 'git log --pretty=format:'%h' -n 1')
 BUILD_TIME= $(shell sh -c 'date -u '+%Y-%m-%dT%H:%M:%SZ'')
-
+GOFLAGS:= $(GOFLAGS) -buildvcs=false
 include $(ENV_FILE)
 export
 
