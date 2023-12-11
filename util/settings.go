@@ -26,10 +26,6 @@ func InitialiseSettings(k8sClient *client.K8sClient) error {
 	if err != nil {
 		return err
 	}
-	runTimeConfig, err := client.GetRuntimeConfig()
-	if err != nil {
-		return err
-	}
 	var hashedPassword string
 	newPassword := false
 	if oldPassword, ok := secret.Data[client.ADMIN_PASSWORD]; !ok || len(oldPassword) == 0 {
@@ -43,14 +39,14 @@ func InitialiseSettings(k8sClient *client.K8sClient) error {
 		}
 		initialPassword := string(randBytes)
 		hashedPassword, err = passwordutil.HashPassword(initialPassword)
-		err = kubeutil.CreateOrUpdateSecretField(runTimeConfig.DevtronDefaultNamespaceName, dexConfig.DevtronSecretName, client.ADMIN_PASSWORD, initialPassword)
+		err = kubeutil.CreateOrUpdateSecretField(client.DevtronDefaultNamespaceName, dexConfig.DevtronSecretName, client.ADMIN_PASSWORD, initialPassword)
 		if err != nil {
 			return err
 		}
 		newPassword = true
 	}
 	passwordTime := time.Now()
-	err = kubeutil.CreateOrUpdateSecret(runTimeConfig.DevtronDefaultNamespaceName, dexConfig.DevtronSecretName, func(s *v1.Secret, new bool) error {
+	err = kubeutil.CreateOrUpdateSecret(client.DevtronDefaultNamespaceName, dexConfig.DevtronSecretName, func(s *v1.Secret, new bool) error {
 		if s.Data == nil {
 			s.Data = make(map[string][]byte)
 		}
@@ -85,10 +81,6 @@ func MigrateDexConfigFromAcdToDevtronSecret(k8sClient *client.K8sClient) (bool, 
 		return false, err
 	}
 	devtronSecret, err := k8sClient.GetDevtronConfig()
-	if err != nil {
-		return false, err
-	}
-	runTimeConfig, err := client.GetRuntimeConfig()
 	if err != nil {
 		return false, err
 	}
@@ -140,7 +132,7 @@ func MigrateDexConfigFromAcdToDevtronSecret(k8sClient *client.K8sClient) (bool, 
 
 		// here create or update devtron secret and migrate and store config for dex
 		if updateRequired {
-			err = kubeutil.CreateOrUpdateSecret(runTimeConfig.DevtronDefaultNamespaceName, dexConfig.DevtronSecretName, func(s *v1.Secret, new bool) error {
+			err = kubeutil.CreateOrUpdateSecret(client.DevtronDefaultNamespaceName, dexConfig.DevtronSecretName, func(s *v1.Secret, new bool) error {
 				if s.Data == nil {
 					s.Data = make(map[string][]byte)
 				}
