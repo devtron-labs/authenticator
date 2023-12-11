@@ -22,6 +22,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/caarlos0/env/v6"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -113,10 +114,12 @@ func (impl *K8sClient) GetArgocdConfig() (secret *v1.Secret, cm *v1.ConfigMap, e
 func (impl *K8sClient) GetDevtronConfig() (secret *v1.Secret, err error) {
 	dexConfig, err := DexConfigConfigFromEnv()
 	if err != nil {
+		log.Errorf("error in loading dex config %s : %v", "dex-config", dexConfig)
 		return nil, err
 	}
 	clientSet, err := kubernetes.NewForConfig(impl.config)
 	if err != nil {
+		log.Errorf("error in loading dex config %s : %v", "clientSet", clientSet)
 		return nil, err
 	}
 	secret, err = clientSet.CoreV1().Secrets(impl.runtimeConfig.DevtronDefaultNamespaceName).Get(context.Background(), dexConfig.DevtronSecretName, v12.GetOptions{})
