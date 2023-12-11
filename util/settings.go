@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/devtron-labs/authenticator/client"
 	passwordutil "github.com/devtron-labs/authenticator/password"
+	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	"math/big"
 	"time"
@@ -20,14 +21,17 @@ func InitialiseSettings(k8sClient *client.K8sClient) error {
 	kubeutil := NewKubeUtil(restClient)
 	dexConfig, err := client.DexConfigConfigFromEnv()
 	if err != nil {
+		log.Errorf("log 1 for dexConfig ")
 		return err
 	}
 	secret, err := k8sClient.GetDevtronConfig()
 	if err != nil {
+		log.Errorf("log 2 for secret ")
 		return err
 	}
 	runtimeConfig, err := client.GetRuntimeConfig()
 	if err != nil {
+		log.Errorf("log 3 for runtimeConfig ")
 		return err
 	}
 	var hashedPassword string
