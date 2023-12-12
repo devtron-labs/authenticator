@@ -45,6 +45,7 @@ var (
 func generateDexConf(client *client2.K8sClient) ([]byte, error) {
 	dexConfig, err := client.GetServerSettings()
 	if err != nil {
+		log.Printf("error in getting dex config in generateDexConf %v\n", dexConfig)
 		return nil, err
 	}
 	dexConfig.DexServerAddress = *dexServerAddress
