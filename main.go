@@ -58,7 +58,8 @@ func main() {
 	dexServerAddress = flag.String("dexServerAddress", "http://127.0.0.1:5556", "dex endpoint")
 	dexCLIClientID = flag.String("dexCLIClientID", "argo-cd", "dex clinet id")
 	flag.Parse()
-	client, err := client2.NewK8sClient(new(client2.RuntimeConfig))
+	runtimeConfig, _ := client2.GetRuntimeConfig()
+	client, err := client2.NewK8sClient(runtimeConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
