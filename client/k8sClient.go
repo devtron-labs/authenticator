@@ -124,6 +124,7 @@ func (impl *K8sClient) GetDevtronConfig() (secret *v1.Secret, err error) {
 	}
 	secret, err = clientSet.CoreV1().Secrets(impl.runtimeConfig.DevtronDefaultNamespaceName).Get(context.Background(), dexConfig.DevtronSecretName, v12.GetOptions{})
 	if err != nil {
+		log.Errorf("error in loading secret %s : %v", "secret", secret)
 		return nil, err
 	}
 	return secret, nil
