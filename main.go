@@ -52,6 +52,10 @@ func generateDexConf(client *client2.K8sClient) ([]byte, error) {
 	dexConfig.DexClientID = *dexCLIClientID
 	dexConfig.UserSessionDurationSeconds = 10000
 	dexCfgBytes, err := client.GenerateDexConfigYAML(dexConfig)
+	if err != nil {
+		log.Printf("error in getting dex config in dexCfgBytes %v\n err : %v", dexCfgBytes, err)
+
+	}
 	return dexCfgBytes, err
 }
 
