@@ -27,6 +27,7 @@ import (
 	client2 "github.com/devtron-labs/authenticator/client"
 	"github.com/devtron-labs/authenticator/middleware"
 	kube "github.com/devtron-labs/authenticator/util"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/mux"
 	"io"
 	"io/ioutil"
@@ -156,9 +157,9 @@ func runWeb() {
 	dexConfig.DexClientID = *dexCLIClientID
 	dexConfig.UserSessionDurationSeconds = 10000
 
-	userVerier := func(email string) bool { return true }
+	userVerifier := func(claims jwt.MapClaims) bool { return true }
 	redirectUrlSanitiser := func(url string) string { return url }
-	oidcClient, dexProxy, err := client2.GetOidcClient(dexConfig, userVerier, redirectUrlSanitiser)
+	oidcClient, dexProxy, err := client2.GetOidcClient(dexConfig, userVerifier, redirectUrlSanitiser)
 	if err != nil {
 		fmt.Println(err)
 		return
