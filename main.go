@@ -216,7 +216,7 @@ func runWeb() {
 	server := &http.Server{
 		Addr: fmt.Sprintf(":%d", 8000),
 		Handler: middleware.Authorizer(sessionManager, middleware.WhitelistChecker, func(token string) (bool, int32, error) {
-			return true, 0
+			return true, 0, nil
 		})(r),
 	}
 	if *serveTls {
