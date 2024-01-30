@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/devtron-labs/authenticator/client"
 	passwordutil "github.com/devtron-labs/authenticator/password"
+	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	"math/big"
 	"time"
@@ -20,10 +21,17 @@ func InitialiseSettings(k8sClient *client.K8sClient) error {
 	kubeutil := NewKubeUtil(restClient)
 	dexConfig, err := client.DexConfigConfigFromEnv()
 	if err != nil {
+		log.Errorf("log 1 for dexConfig ")
 		return err
 	}
 	secret, err := k8sClient.GetDevtronConfig()
 	if err != nil {
+		log.Errorf("log 2 for secret ")
+		return err
+	}
+	runtimeConfig, err := client.GetRuntimeConfig()
+	if err != nil {
+		log.Errorf("log 3 for runtimeConfig ")
 		return err
 	}
 	var hashedPassword string
@@ -39,14 +47,14 @@ func InitialiseSettings(k8sClient *client.K8sClient) error {
 		}
 		initialPassword := string(randBytes)
 		hashedPassword, err = passwordutil.HashPassword(initialPassword)
-		err = kubeutil.CreateOrUpdateSecretField(client.DevtronDefaultNamespaceName, dexConfig.DevtronSecretName, client.ADMIN_PASSWORD, initialPassword)
+		err = kubeutil.CreateOrUpdateSecretField(runtimeConfig.DevtronDefaultNamespaceName, dexConfig.DevtronSecretName, client.ADMIN_PASSWORD, initialPassword)
 		if err != nil {
 			return err
 		}
 		newPassword = true
 	}
 	passwordTime := time.Now()
-	err = kubeutil.CreateOrUpdateSecret(client.DevtronDefaultNamespaceName, dexConfig.DevtronSecretName, func(s *v1.Secret, new bool) error {
+	err = kubeutil.CreateOrUpdateSecret(runtimeConfig.DevtronDefaultNamespaceName, dexConfig.DevtronSecretName, func(s *v1.Secret, new bool) error {
 		if s.Data == nil {
 			s.Data = make(map[string][]byte)
 		}
@@ -85,6 +93,10 @@ func MigrateDexConfigFromAcdToDevtronSecret(k8sClient *client.K8sClient) (bool, 
 		return false, err
 	}
 	acdSecret, acdConfigMap, err := k8sClient.GetArgocdConfig()
+	if err != nil {
+		return false, err
+	}
+	runtimeConfig, err := client.GetRuntimeConfig()
 	if err != nil {
 		return false, err
 	}
@@ -132,7 +144,7 @@ func MigrateDexConfigFromAcdToDevtronSecret(k8sClient *client.K8sClient) (bool, 
 
 		// here create or update devtron secret and migrate and store config for dex
 		if updateRequired {
-			err = kubeutil.CreateOrUpdateSecret(client.DevtronDefaultNamespaceName, dexConfig.DevtronSecretName, func(s *v1.Secret, new bool) error {
+			err = kubeutil.CreateOrUpdateSecret(runtimeConfig.DevtronDefaultNamespaceName, dexConfig.DevtronSecretName, func(s *v1.Secret, new bool) error {
 				if s.Data == nil {
 					s.Data = make(map[string][]byte)
 				}

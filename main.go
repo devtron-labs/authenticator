@@ -45,12 +45,17 @@ var (
 func generateDexConf(client *client2.K8sClient) ([]byte, error) {
 	dexConfig, err := client.GetServerSettings()
 	if err != nil {
+		log.Printf("error in getting dex config in generateDexConf %v\n", dexConfig)
 		return nil, err
 	}
 	dexConfig.DexServerAddress = *dexServerAddress
 	dexConfig.DexClientID = *dexCLIClientID
 	dexConfig.UserSessionDurationSeconds = 10000
 	dexCfgBytes, err := client.GenerateDexConfigYAML(dexConfig)
+	if err != nil {
+		log.Printf("error in getting dex config in dexCfgBytes %v\n err : %v", dexCfgBytes, err)
+
+	}
 	return dexCfgBytes, err
 }
 
@@ -58,7 +63,8 @@ func main() {
 	dexServerAddress = flag.String("dexServerAddress", "http://127.0.0.1:5556", "dex endpoint")
 	dexCLIClientID = flag.String("dexCLIClientID", "argo-cd", "dex clinet id")
 	flag.Parse()
-	client, err := client2.NewK8sClient(new(client2.RuntimeConfig))
+	runtimeConfig, _ := client2.GetRuntimeConfig()
+	client, err := client2.NewK8sClient(runtimeConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
