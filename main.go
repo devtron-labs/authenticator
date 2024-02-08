@@ -27,6 +27,7 @@ import (
 	client2 "github.com/devtron-labs/authenticator/client"
 	"github.com/devtron-labs/authenticator/middleware"
 	kube "github.com/devtron-labs/authenticator/util"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/mux"
 	"io"
 	"io/ioutil"
@@ -156,9 +157,9 @@ func runWeb() {
 	dexConfig.DexClientID = *dexCLIClientID
 	dexConfig.UserSessionDurationSeconds = 10000
 
-	userVerier := func(email string) bool { return true }
+	userVerifier := func(claims jwt.MapClaims) bool { return true }
 	redirectUrlSanitiser := func(url string) string { return url }
-	oidcClient, dexProxy, err := client2.GetOidcClient(dexConfig, userVerier, redirectUrlSanitiser)
+	oidcClient, dexProxy, err := client2.GetOidcClient(dexConfig, userVerifier, redirectUrlSanitiser)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -214,8 +215,10 @@ func runWeb() {
 	r.HandleFunc("/hello", helloHandler)
 	log.Println("Listing for requests at http://localhost:8000/hello")
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", 8000),
-		Handler: middleware.Authorizer(sessionManager, middleware.WhitelistChecker)(r),
+		Addr: fmt.Sprintf(":%d", 8000),
+		Handler: middleware.Authorizer(sessionManager, middleware.WhitelistChecker, func(token string) (bool, int32, error) {
+			return true, 0, nil
+		})(r),
 	}
 	if *serveTls {
 		cert, err := tls.LoadX509KeyPair("localhost.crt", "localhost.key")
