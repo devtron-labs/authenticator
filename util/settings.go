@@ -39,6 +39,7 @@ func InitialiseSettings(k8sClient *client.K8sClient) error {
 		}
 		initialPassword := string(randBytes)
 		hashedPassword, err = passwordutil.HashPassword(initialPassword)
+
 		err = kubeutil.CreateOrUpdateSecretField(client.DevtronDefaultNamespaceName, dexConfig.DevtronSecretName, client.ADMIN_PASSWORD, initialPassword)
 		if err != nil {
 			return err
