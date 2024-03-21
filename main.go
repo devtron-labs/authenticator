@@ -59,7 +59,11 @@ func main() {
 	dexServerAddress = flag.String("dexServerAddress", "http://127.0.0.1:5556", "dex endpoint")
 	dexCLIClientID = flag.String("dexCLIClientID", "argo-cd", "dex clinet id")
 	flag.Parse()
-	client, err := client2.NewK8sClient(new(client2.RuntimeConfig))
+	runtimeConfig, err := client2.GetRuntimeConfig()
+	if err != nil {
+		log.Println("error in getting runtime config, continuing with default runtime configurations", "err", err)
+	}
+	client, err := client2.NewK8sClient(runtimeConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -145,7 +149,11 @@ func runWeb() {
 	serveTls := flag.Bool("serveTls", true, "dex clinet id")
 	flag.Parse()
 
-	client, err := client2.NewK8sClient(new(client2.RuntimeConfig))
+	runtimeConfig, err := client2.GetRuntimeConfig()
+	if err != nil {
+		log.Println("error in getting runtime config, continuing with default runtime configurations", "err", err)
+	}
+	client, err := client2.NewK8sClient(runtimeConfig)
 	if err != nil {
 		panic(err)
 	}
