@@ -197,34 +197,3 @@ func (rt *TransportWithHeader) RoundTrip(r *http.Request) (*http.Response, error
 	}
 	return rt.RoundTripper.RoundTrip(r)
 }
-
-// ReConstructSplitToken this method reconstructs the split argo-cd.token
-// check MakeCookieMetadata method to know how the token was split
-func ReConstructSplitToken(r *http.Request) string {
-	cookie, _ := r.Cookie(AuthCookieName)
-	if cookie != nil {
-		token := cookie.Value
-		tokenChunks := strings.Split(token, ":")
-		if len(tokenChunks) == 1 {
-			return token
-		}
-
-		noChunks, err := strconv.Atoi(tokenChunks[0])
-		if err != nil {
-			log.Infof("err in re-constructing splitted token: %v\n", err)
-		}
-
-		token = tokenChunks[1]
-		for i := 1; i < noChunks; i++ {
-			cookieName := AuthCookieName + fmt.Sprintf("-%d", i)
-			i_cookie, _ := r.Cookie(cookieName)
-			if i_cookie != nil {
-				token += i_cookie.Value
-			}
-		}
-
-		return token
-	}
-
-	return ""
-}
