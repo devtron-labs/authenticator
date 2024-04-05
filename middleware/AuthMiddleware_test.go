@@ -62,22 +62,22 @@ func Test_ReconstructSplitToken(t *testing.T) {
 		verifySplitAndJoinToken(token, tt)
 	})
 
-	t.Run("5", func(tt *testing.T) {
+	t.Run("5 key vals in claims", func(tt *testing.T) {
 		token := generateJWTToken(5)
 		verifySplitAndJoinToken(token, tt)
 	})
 
-	t.Run("10", func(tt *testing.T) {
+	t.Run("10 key vals in claims", func(tt *testing.T) {
 		token := generateJWTToken(10)
 		verifySplitAndJoinToken(token, tt)
 	})
 
-	t.Run("20", func(tt *testing.T) {
+	t.Run("20 key vals in claims", func(tt *testing.T) {
 		token := generateJWTToken(20)
 		verifySplitAndJoinToken(token, tt)
 	})
 
-	t.Run("100", func(tt *testing.T) {
+	t.Run("100 key vals in claims", func(tt *testing.T) {
 		token := generateJWTToken(100)
 		verifySplitAndJoinToken(token, tt)
 	})
