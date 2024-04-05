@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/devtron-labs/authenticator/oidc"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
@@ -40,7 +41,7 @@ func Authorizer(sessionManager *SessionManager, whitelistChecker func(url string
 				// for external ci webhook request, will be authorize by api-token
 				token = apiToken
 			} else {
-				cookie, _ := r.Cookie(argocdTokenHeaderKey)
+				cookie, _ := r.Cookie(oidc.AuthCookieName)
 				if cookie != nil {
 					token = cookie.Value
 					r.Header.Set(tokenHeaderKey, token)
