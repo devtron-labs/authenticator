@@ -1,8 +1,6 @@
 module github.com/devtron-labs/authenticator
 
-go 1.21
-
-toolchain go1.22.5
+go 1.18
 
 require (
 	github.com/caarlos0/env/v6 v6.7.2
