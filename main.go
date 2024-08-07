@@ -223,8 +223,8 @@ func runWeb() {
 	log.Println("Listing for requests at http://localhost:8000/hello")
 	server := &http.Server{
 		Addr: fmt.Sprintf(":%d", 8000),
-		Handler: middleware.Authorizer(sessionManager, middleware.WhitelistChecker, func(token string) (bool, int32, error) {
-			return true, 0, nil
+		Handler: middleware.Authorizer(sessionManager, middleware.WhitelistChecker, func(token string) (bool, int32, string, error) {
+			return true, 0, "", nil
 		})(r),
 	}
 	if *serveTls {
