@@ -1,0 +1,14 @@
+# ⚠️ Deprecated Repository
+
+This repository has been deprecated and is no longer actively maintained.
+
+## New Location
+
+The code has been moved to:
+[authenticator](https://github.com/devtron-labs/devtron-services/tree/main/authenticator)
+
+Please update your references and direct all future contributions, issues, and pull requests to the new repository location.
+
+For any questions or concerns, please open an issue in the new repository.
+
+Thank you for your understanding.
