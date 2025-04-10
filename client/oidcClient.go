@@ -85,10 +85,11 @@ type DexConfig struct {
 	DexClientSecret  string
 	ServerSecret     string
 	// Specifies token expiration duration
-	UserSessionDurationSeconds int       `env:"USER_SESSION_DURATION_SECONDS" envDefault:"86400"`
+	UserSessionDurationSeconds int       `env:"USER_SESSION_DURATION_SECONDS" envDefault:"86400" description:"Session time after which user have to reLogin"`
 	AdminPasswordMtime         time.Time `json:"ADMIN_PASSWORD_MTIME"`
 	DexConfigRaw               string
-	DevtronSecretName          string `env:"DEVTRON_SECRET_NAME" envDefault:"devtron-secret"`
+	DevtronSecretName          string `env:"DEVTRON_SECRET_NAME" envDefault:"devtron-secret" description:"Secret name for orchestrator micro-services"`
+
 }
 
 func (c *DexConfig) GetDexProxyUrl() (string, error) {
